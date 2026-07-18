@@ -1,0 +1,12 @@
+{
+  "_comment": "Falcon provisioner theme map: homepage theme_id (card data-theme slug) -> WordPress theme slug (wp theme install). All slugs are free from wordpress.org. Fallback is 'default' if theme_id is unknown or install fails.",
+  "default": "twentytwentyfour",
+  "themes": {
+    "studio": "twentytwentyfour",
+    "cafe": "twentytwentythree",
+    "saas": "astra",
+    "portfolio": "twentytwentyfour",
+    "realestate": "astra",
+    "agency": "astra"
+  }
+}

@@ -1,0 +1,5 @@
+# Falcon of Codes - Phase 4 provisioner poller.
+# Every minute: check Blesta for new $0 trial services and provision WordPress.
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+* * * * * root /usr/bin/php /opt/falcon-provisioner/bin/blesta_poll.php >/dev/null 2>&1

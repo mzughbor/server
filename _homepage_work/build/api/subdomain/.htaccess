@@ -1,0 +1,11 @@
+# Falcon subdomain API - clean extensionless routes.
+# Scoped to /api/subdomain/ so it never affects the homepage or /portal/ (Blesta).
+RewriteEngine On
+RewriteBase /api/subdomain/
+
+# Never serve the shared library directly (OLS honors rewrite, not <Files>).
+RewriteRule ^_lib\.php$ - [F,L]
+
+RewriteRule ^check/?$   check.php   [L,QSA]
+RewriteRule ^reserve/?$ reserve.php [L,QSA]
+RewriteRule ^bridge/?$  bridge.php  [L,QSA]
