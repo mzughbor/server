@@ -45,7 +45,7 @@ INSERT INTO users (username,password,date_added) VALUES ('$(esc "$EMAIL")','$(es
 SET @uid=LAST_INSERT_ID();
 INSERT INTO clients (id_format,id_value,user_id,client_group_id,status) VALUES ('{num}','$CIV',@uid,1,'active');
 SET @cid=LAST_INSERT_ID();
-INSERT INTO contacts (client_id,user_id,contact_type,first_name,last_name,email,date_added) VALUES (@cid,@uid,'primary','Proof','Client','$(esc "$EMAIL")',NOW());
+INSERT INTO contacts (client_id,user_id,contact_type,first_name,last_name,email,country,date_added) VALUES (@cid,NULL,'primary','Proof','Client','$(esc "$EMAIL")','US',NOW());
 INSERT INTO services (pricing_id,client_id,qty,status,id_format,id_value,date_added,date_renews) VALUES (4,@cid,1,'active','{num}','$SIV',NOW(),DATE_ADD(NOW(),INTERVAL 1 MONTH));
 SET @sid=LAST_INSERT_ID();
 INSERT INTO service_options (service_id,option_pricing_id,qty,value,encrypted) VALUES (@sid,$SPID,1,'$(esc "$SUB")',0),(@sid,$TPID,1,'$(esc "$THEME_ID")',0);
