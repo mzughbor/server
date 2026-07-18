@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "falcon-vps": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "ssh-mcp",
+        "--",
+        "--host=195.35.1.18",
+        "--port=22",
+        "--user=root",
+        "--key=/home/mzug/.ssh/id_ed25519",
+        "--timeout=60000",
+        "--maxChars=none"
+      ]
+    }
+  }
+}
