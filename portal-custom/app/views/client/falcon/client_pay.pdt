@@ -1,0 +1,86 @@
+        <div class="col-md-12">
+            <?php
+            echo (isset($message) ? $message : null);
+
+            $this->WidgetClient->clear();
+            $this->WidgetClient->create($this->_('ClientPay.index.boxtitle_pay', true), ['id' => 'client_pay'], (isset($render_section) ? $render_section : null));
+            $this->WidgetClient->startBody();
+
+            $this->Form->create(null, ['class' => 'disable-on-submit']);
+
+            echo (isset($invoice_info) ? $invoice_info : null);
+            ?>
+            <hr />
+            <?php
+            if (($payment_credit_enabled ?? '1') == '1') {
+            ?>
+            <div class="row panel-fix">
+                <div class="col-xs-3">
+                    <div class="form-group">
+                        <?php
+                        $this->Form->label($this->_('ClientPay.index.field_credit', true), 'credit');
+                        ?>
+                        <div class="input-group mb-1">
+                            <?php
+                            $this->Form->fieldText('credit', (isset($vars->credit) ? $vars->credit : null), ['id' => 'credit', 'class' => 'form-control']);
+                            ?>
+                            <div class="input-group-append">
+                                <span class="input-group-text"><?php (print (isset($currency) ? $this->Html->safe($currency) : null));?></span>
+                            </div>
+                        </div>
+                        <?php
+                        if ($has_credit_limits ?? false) {
+                            if ($credit_min && $credit_max) {
+                        ?>
+                        <p class="help-block"><i class="fas fa-info-circle fa-fw"></i> <?php $this->_('ClientPay.index.text_credit_limits', false, $this->Html->safe($credit_min), $this->Html->safe($credit_max));?></p>
+                        <?php
+                            } elseif ($credit_min) {
+                        ?>
+                        <p class="help-block"><i class="fas fa-info-circle fa-fw"></i> <?php $this->_('ClientPay.index.text_credit_min_only', false, $this->Html->safe($credit_min));?></p>
+                        <?php
+                            } elseif ($credit_max) {
+                        ?>
+                        <p class="help-block"><i class="fas fa-info-circle fa-fw"></i> <?php $this->_('ClientPay.index.text_credit_max_only', false, $this->Html->safe($credit_max));?></p>
+                        <?php
+                            }
+                        }
+                        ?>
+                    </div>
+                </div>
+            </div>
+            <?php
+            }
+            ?>
+
+            <button type="submit" class="btn btn-light float-right">
+                <i class="fas fa-arrow-circle-right"></i> <?php $this->_('ClientPay.index.field_submit');?>
+            </button>
+            <?php
+            $this->Form->end();
+            $this->WidgetClient->endBody();
+            $this->WidgetClient->end();
+            ?>
+        </div>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        selectAllPayments();
+
+        $("input[name='invoice_id[]']").on("change", function() {
+            if ($(this).val() == "all") {
+                if ($(this).is(":checked"))
+                    $("input[name='invoice_id[]']").prop('checked', true);
+                else
+                    $("input[name='invoice_id[]']").prop('checked', false);
+            }
+        });
+    });
+
+    function selectAllPayments() {
+        var element = $("input[name='invoice_id[]']");
+        if ($(element).val() == "all" && $(element).prop('checked')) {
+            if ($(element).is(":checked"))
+                $(element).prop('checked', true);
+        }
+    }
+</script>

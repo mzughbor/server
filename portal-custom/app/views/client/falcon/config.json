@@ -1,0 +1,14 @@
+{
+	"version": "2.0.0",
+	"name": "Falcon",
+	"description": "Falcon of Codes client theme. Built on Bootstrap 4.6 with Falcon brand overrides.",
+	"authors": [
+		{
+			"name": "Falcon of Codes",
+			"url": "https://falcon.codes"
+		}
+	],
+	"require": {
+		"blesta": ">=5.0.0"
+	}
+}

@@ -1,0 +1,64 @@
+# ============================================================
+# Falcon of Codes — repo = "how to rebuild". Secrets stay on the VPS.
+# ============================================================
+
+# ---- Secrets / credentials (NEVER commit) ----
+**/secrets/**
+**/*.env
+!**/*.env.example
+**/.blesta_api_key
+**/*api_key*
+**/*apikey*
+**/*credential*
+**/*.pem
+**/*.key
+id_rsa*
+
+# Blesta / app configs that carry DB passwords
+**/config/database.php
+**/config/blesta.php
+**/wp-config.php
+
+# ---- Backups / dumps (private only, not git) ----
+*.bak
+*.bak.*
+*.orig
+*.sql
+*.sql.gz
+*.tar
+*.tar.gz
+*.zip
+/srv/clientexec/**
+clientexec*/
+
+# ---- Full Blesta core / WordPress core (reinstall from source) ----
+# We only track portal-custom/ (the falcon theme). Never the whole portal.
+portal/
+public_html/portal/
+wordpress/
+wp-admin/
+wp-includes/
+
+# Blesta runtime we never want
+**/uploads/**
+**/cache/**
+**/portal/app/views/client/bootstrap/**
+
+# WordPress child-site docroots (provisioned per customer)
+*.falcon.codes/
+
+# ---- Runtime state (lives in /var/lib on server) ----
+reservations.json
+bridge.json
+sites.json
+processed.json
+*.lock
+
+# ---- OS / editor junk ----
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+node_modules/

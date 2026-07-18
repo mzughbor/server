@@ -1,0 +1,163 @@
+/*
+ * Falcon of Codes - client theme brand overrides
+ * Loaded AFTER application.min.css and the Blesta color theme so it wins the cascade.
+ * Colors/typography only - no layout/structure changes. Tokens mirror the
+ * homepage styles.css brand palette (amethyst / Inter).
+ */
+:root {
+    --falcon-purple: #9354B7;        /* amethyst / primary accent */
+    --falcon-purple-dark: #543A9C;   /* rebecca purple / hover */
+    --falcon-purple-light: #C5A8E0;  /* wisteria */
+    --falcon-purple-pale: #E3DAFE;   /* periwinkle */
+    --falcon-text: #111827;
+    --falcon-text-muted: #6B7280;
+    --falcon-border: #E5E7EB;
+    --falcon-footer-bg: #1a1229;
+    --falcon-font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Typography */
+body,
+.nav-content .navbar,
+.btn,
+input,
+select,
+textarea,
+button {
+    font-family: var(--falcon-font);
+}
+
+/* Links */
+a {
+    color: var(--falcon-purple);
+}
+a:hover,
+a:focus {
+    color: var(--falcon-purple-dark);
+}
+
+/* Primary buttons */
+.btn-primary,
+.btn-info {
+    background-color: var(--falcon-purple) !important;
+    border-color: var(--falcon-purple) !important;
+    color: #ffffff !important;
+}
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active,
+.btn-primary.active,
+.btn-info:hover,
+.btn-info:focus,
+.btn-info:active {
+    background-color: var(--falcon-purple-dark) !important;
+    border-color: var(--falcon-purple-dark) !important;
+    color: #ffffff !important;
+}
+.btn-primary:focus,
+.btn-info:focus {
+    box-shadow: 0 0 0 0.2rem rgba(147, 84, 183, 0.35) !important;
+}
+
+/* Outline / secondary accents that should read as brand */
+.btn-outline-primary {
+    color: var(--falcon-purple) !important;
+    border-color: var(--falcon-purple) !important;
+}
+.btn-outline-primary:hover {
+    background-color: var(--falcon-purple) !important;
+    border-color: var(--falcon-purple) !important;
+    color: #ffffff !important;
+}
+
+/* Links styled as buttons within the header/nav */
+.top-nav .dropdown a.dropdown-toggle:hover {
+    color: var(--falcon-purple) !important;
+}
+
+/* Active navigation item accent */
+.nav-content .navbar .nav-item.active > .nav-link,
+.nav-content .navbar .nav-link.active,
+.nav-tabs .nav-link.active {
+    color: var(--falcon-purple) !important;
+    border-color: var(--falcon-purple) !important;
+}
+.nav-tabs .nav-link:hover {
+    border-bottom-color: var(--falcon-purple-light) !important;
+}
+
+/* Card accent bars keep the brand tint */
+.cards .card {
+    border-bottom-color: var(--falcon-purple) !important;
+}
+
+/* Form focus states */
+.form-control:focus,
+.custom-select:focus,
+.form-check-input:focus {
+    border-color: var(--falcon-purple) !important;
+    box-shadow: 0 0 0 0.2rem rgba(147, 84, 183, 0.25) !important;
+}
+
+/* Text / background brand helpers used by order form and pricing */
+.text-primary { color: var(--falcon-purple) !important; }
+.bg-primary { background-color: var(--falcon-purple) !important; }
+.badge-primary,
+.badge-info {
+    background-color: var(--falcon-purple) !important;
+    color: #ffffff !important;
+}
+.badge-light {
+    background-color: var(--falcon-purple-pale) !important;
+    color: var(--falcon-purple-dark) !important;
+}
+
+/* Order form (plugin-order) accents */
+body[class^="plugin-order"] .card-header,
+body[class*="plugin-order"] .plan .plan-header,
+/*
+body[class*="plugin-order"] .package-name {
+    color: var(--falcon-text);
+}
+*/
+body[class*="plugin-order"] .btn-primary,
+body[class*="plugin-order"] .order-nav .active {
+    background-color: var(--falcon-purple) !important;
+    border-color: var(--falcon-purple) !important;
+}
+body[class*="plugin-order"] a {
+    color: var(--falcon-purple);
+}
+body[class*="plugin-order"] a:hover {
+    color: var(--falcon-purple-dark);
+}
+
+/* Pagination */
+.page-item.active .page-link {
+    background-color: var(--falcon-purple) !important;
+    border-color: var(--falcon-purple) !important;
+}
+.page-link {
+    color: var(--falcon-purple);
+}
+
+/* Progress / highlight accents */
+.progress-bar {
+    background-color: var(--falcon-purple) !important;
+}
+
+/* Footer branding */
+.row.footer p a {
+    color: var(--falcon-purple);
+}
+.row.footer p a:hover {
+    color: var(--falcon-purple-dark);
+}
+
+/* Header logo larger than default 32px */
+.logo img,
+.navbar-brand img {
+  height: 48px !important;
+  width: auto !important;
+  max-height: 48px !important;
+}

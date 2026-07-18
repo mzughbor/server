@@ -1,0 +1,36 @@
+
+    <?php
+    if (!empty($amounts)) {
+    ?>
+    <div class="list-group list-options">
+        <?php
+        if (count((isset($currencies) ? $currencies : [])) > 1) {
+        ?>
+        <div class="list-group-item credits bg-light">
+            <?php
+            foreach ($currencies as $currency) {
+            ?>
+            <a href="<?php echo $this->Html->safe($this->base_uri . 'main/getcurrencyamounts/' . (isset($currency) ? $currency : null) . '/');?>" class="btn btn-light btn-sm<?php echo ($currency == (isset($selected_currency) ? $selected_currency : null)) ? ' active' : '';?>" id="<?php (print (isset($currency) ? $this->Html->safe($currency) : null));?>"><?php (print (isset($currency) ? $this->Html->safe($currency) : null));?></a>
+            <?php
+            }
+            ?>
+        </div>
+        <?php
+        }
+        foreach ($amounts as $type => $item) {
+        ?>
+        <div class="list-group-item credits bg-light">
+            <?php (print (isset($item['lang']) ? $this->Html->safe($item['lang']) : null));?> <span class="currency_value"><?php (print (isset($item['amount']) ? $this->Html->safe($item['amount']) : null));?></span>
+        </div>
+        <?php
+        }
+        ?>
+        <?php if (($payment_credit_enabled ?? '1') == '1') { ?>
+        <a href="<?php echo $this->Html->safe($this->base_uri . 'pay/');?>" class="list-group-item">
+            <i class="fas fa-plus-circle"></i> <?php $this->_('ClientMain.getcurrencyamounts.link_addcredits');?>
+        </a>
+        <?php } ?>
+    </div>
+    <?php
+    }
+    ?>

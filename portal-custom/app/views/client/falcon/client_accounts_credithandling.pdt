@@ -1,0 +1,60 @@
+
+<div class="col-md-3">
+    <?php echo ($navigation ?? null); ?>
+</div>
+<div class="col-md-9">
+    <div class="row">
+        <div class="col-md-12">
+            <?php
+            echo ($message ?? null);
+
+            $this->WidgetClient->clear();
+            $this->WidgetClient->create($this->_('ClientAccounts.credithandling.boxtitle_credithandling', true), ['id' => 'client_credithandling'], ($render_section ?? null));
+            $this->WidgetClient->startBody();
+
+            $this->Form->create(null, ['class' => 'disable-on-submit']);
+            ?>
+            <div class="table-responsive">
+                <table class="table table-curved table-striped mb-2">
+                    <thead>
+                        <tr>
+                            <th><?php $this->_('ClientAccounts.credithandling.heading_currency');?></th>
+                            <th><?php $this->_('ClientAccounts.credithandling.heading_threshold');?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $i = 0;
+                        foreach ($currencies ?? [] as $currency) {
+                            $threshold_value = isset($vars->credit_thresholds[$currency->code]) ? $this->CurrencyFormat->format($vars->credit_thresholds[$currency->code], $currency->code, ['prefix' => false, 'suffix' => false, 'with_separator' => false, 'code' => false]) : null;
+                        ?>
+                            <tr<?php echo (($i % 2 == 1) ? ' class="odd_row"' : '');?>>
+                                <td>
+                                    <strong><?php echo $this->Html->safe($currency->code);?></strong>
+                                </td>
+                                <td>
+                                    <?php $this->Form->fieldText('credit_thresholds[' . $this->Html->safe($currency->code) . ']', $threshold_value, ['class' => 'form-control form-control-sm', 'placeholder' => $this->CurrencyFormat->format(0, $currency->code, ['prefix' => false, 'suffix' => false, 'code' => false])]);?>
+                                </td>
+                            </tr>
+                        <?php
+                            $i++;
+                        }
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="button_row btn_right">
+                <button type="submit" value="save" class="btn btn-light float-right">
+                    <i class="fas fa-edit"></i> <?php $this->_('ClientAccounts.credithandling.field_submit');?>
+                </button>
+            </div>
+            <?php
+            $this->Form->end();
+
+            $this->WidgetClient->endBody();
+            $this->WidgetClient->end();
+            ?>
+        </div>
+    </div>
+</div>
