@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 # One-time Blesta setup for Phase 4 "creds in client area" + auto-activate.
 # - Section A: force $0 trial auto-activation (idempotent).
-# - Creates a hidden config-option group assigned to package 4 with fields the
+# - Creates a config-option group assigned to package 4 with fields the
 #   provisioner/poller populate per service (subdomain, theme + access creds).
 #   The client sees these under Client area -> Services -> (service) ->
 #   "Configurable Options" (rendered by the stock/falcon theme, no theme edit).
+# - subdomain + theme are addable=1 (visible on the ORDER form) so the customer's
+#   choice is captured natively into service_options on checkout; the order
+#   template's prefill JS fills + hides them. The poller then reads them as the
+#   PRIMARY source (source=blesta_field) instead of the bridge.json fallback.
+#   The remaining credential fields stay hidden=1 (poller-written, display-only).
 # Emits /opt/falcon-provisioner/templates/blesta_options.json  { field: option_pricing_id }
 # Safe to re-run: purges its own prior group/options first.
 set -uo pipefail
@@ -55,26 +60,34 @@ GID=$(q "SELECT id FROM package_option_groups WHERE company_id=1 AND name='$GROU
 echo "group id=$GID"
 q "INSERT INTO package_option (package_id,option_group_id,\`order\`) VALUES ($PKG,$GID,0);"
 
-# field|label|type    (order preserved for display)
+# field|label|type|addable|hidden   (order preserved for display)
+#   addable=1,hidden=0  -> captured natively at ORDER time (customer's choice
+#                          lands in service_options on checkout) AND visible in
+#                          the client area. Used for subdomain + theme so the
+#                          poller reads them as source=blesta_field.
+#   addable=0,hidden=1  -> display-only credential fields written by the poller
+#                          AFTER provisioning (never shown on the order form).
+# editable is 0 for every field (clients never change them post-order); the
+# prefill JS in the order template makes the two capturable inputs readonly.
 FIELDS=(
-  "subdomain|Subdomain|text"
-  "theme|Theme|text"
-  "site_url|Website URL|text"
-  "wp_admin_url|WordPress Admin URL|text"
-  "wp_user|WordPress Username|text"
-  "wp_pass|WordPress Password|password"
-  "ftp_access|File Access (FTP / FTPS)|text"
-  "ftp_user|FTP Username|text"
-  "ftp_pass|FTP Password|password"
+  "subdomain|Subdomain|text|1|0"
+  "theme|Theme|text|1|0"
+  "site_url|Website URL|text|0|1"
+  "wp_admin_url|WordPress Admin URL|text|0|1"
+  "wp_user|WordPress Username|text|0|1"
+  "wp_pass|WordPress Password|password|0|1"
+  "ftp_access|File Access (FTP / FTPS)|text|0|1"
+  "ftp_user|FTP Username|text|0|1"
+  "ftp_pass|FTP Password|password|0|1"
 )
 
 echo "{" > /tmp/blesta_options.json
 i=0; n=${#FIELDS[@]}
 for row in "${FIELDS[@]}"; do
-  key="${row%%|*}"; rest="${row#*|}"; label="${rest%%|*}"; type="${rest##*|}"
+  IFS='|' read -r key label type addable hidden <<< "$row"
   mysql "$DB" <<SQL
 INSERT INTO package_options (company_id,label,name,description,type,addable,editable,hidden,disable_pricing,hide_on_invoice)
-VALUES (1,'$label','$key','','$type',0,0,1,1,1);
+VALUES (1,'$label','$key','','$type',$addable,0,$hidden,1,1);
 SET @oid=LAST_INSERT_ID();
 INSERT INTO package_option_values (option_id,name,value,\`default\`,status,\`order\`,min,max,step)
 VALUES (@oid,'','',0,'active',$i,NULL,NULL,NULL);

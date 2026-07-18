@@ -1,0 +1,106 @@
+<!-- ==== Falcon of Codes prefill (BEGIN) ============================================
+     Prefills the `subdomain` + `theme` configurable options on the order form
+     from the homepage handoff, so the customer's choice is captured NATIVELY
+     into Blesta `service_options` on checkout. The poller then reads them as the
+     PRIMARY source (log: [source=blesta_field]) instead of the bridge fallback.
+
+     Carrier: sessionStorage keys set on https://falcon.codes/ (same origin as
+     /portal), with the top-level URL query params (?subdomain=&theme=&token=) as
+     a fallback. Values are re-persisted to sessionStorage so they survive the
+     multi-step flow (config -> cart -> checkout).
+
+     The two rows are filled, set readonly, and visually hidden to keep checkout
+     clean. All other credential fields stay hidden=1 (poller-written).
+
+     UPGRADE-SAFETY: this is a plugin template override (not upgrade-safe). The
+     canonical copy lives in the repo at
+       portal-custom/plugins/order/views/templates/standard/config.pdt
+     Re-apply after any Blesta/order-plugin update (see portal-custom/NOTES.md).
+================================================================================ -->
+<script type="text/javascript">
+(function () {
+  // package_options.id for the two capturable options. The DOM input name uses
+  // the OPTION id (configoptions[<option_id>]); see blesta_options.json for the
+  // field -> option_pricing_id map the poller reads.
+  var OPTS = { subdomain: 13, theme: 14 };
+  var SS = { subdomain: "falcon_subdomain", theme: "falcon_theme", token: "falcon_token" };
+
+  function qs(name) {
+    try { return new URLSearchParams(window.location.search).get(name) || ""; }
+    catch (e) { return ""; }
+  }
+  function ssGet(k) { try { return sessionStorage.getItem(k) || ""; } catch (e) { return ""; } }
+  function ssSet(k, v) { try { if (v) sessionStorage.setItem(k, v); } catch (e) {} }
+
+  // sessionStorage first, then top-level URL query params; persist the fallback
+  // back so it survives config -> cart -> checkout (same origin).
+  var vals = {
+    subdomain: ssGet(SS.subdomain) || qs("subdomain"),
+    theme: ssGet(SS.theme) || qs("theme"),
+    token: ssGet(SS.token) || qs("token")
+  };
+  ssSet(SS.subdomain, vals.subdomain);
+  ssSet(SS.theme, vals.theme);
+  ssSet(SS.token, vals.token);
+
+  if (!vals.subdomain && !vals.theme) return; // nothing to carry
+
+  function hideRow(input) {
+    input.style.display = "none";
+    if (input.id) {
+      var lbl = document.querySelector('label[for="' + input.id + '"]');
+      if (lbl) lbl.style.display = "none";
+    }
+    var prev = input.previousElementSibling;
+    if (prev && prev.tagName === "LABEL") prev.style.display = "none";
+    var p = input.parentElement;
+    for (var i = 0; i < 3 && p; i++) {
+      if (p.classList && (p.classList.contains("form-group") || p.classList.contains("form-field"))) {
+        p.style.display = "none";
+        return;
+      }
+      p = p.parentElement;
+    }
+  }
+
+  function fill(optId, value) {
+    if (!value) return false;
+    var el = document.querySelector('[name="configoptions[' + optId + ']"]');
+    if (!el) return false;
+    if (el.value !== value || !el.readOnly) {
+      el.value = value;
+      el.setAttribute("readonly", "readonly");
+      el.readOnly = true;
+      try { el.dispatchEvent(new Event("change", { bubbles: true })); } catch (e) {}
+    }
+    hideRow(el);
+    return true;
+  }
+
+  function apply() {
+    var a = fill(OPTS.subdomain, vals.subdomain);
+    var b = fill(OPTS.theme, vals.theme);
+    return a || b;
+  }
+
+  // Config options load via AJAX into .package_options and re-render on term
+  // change, so observe the container and re-apply. Interval is a safety net.
+  function boot() {
+    apply();
+    var container = document.querySelector(".package_options") || document.body;
+    try {
+      var mo = new MutationObserver(function () { apply(); });
+      mo.observe(container, { childList: true, subtree: true });
+    } catch (e) {}
+    var tries = 0;
+    var t = setInterval(function () { apply(); if (++tries > 30) clearInterval(t); }, 400);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+})();
+</script>
+<!-- ==== Falcon of Codes prefill (END) ============================================= -->

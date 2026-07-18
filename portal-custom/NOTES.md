@@ -1,11 +1,54 @@
 # Blesta customizations (portal-custom)
 
 This folder contains **only** our Blesta customizations, never the licensed core.
-The only tracked artifact is the custom client theme:
+Tracked artifacts:
 
 ```
-app/views/client/falcon/     # cloned from bootstrap for update-safety
+app/views/client/falcon/                                  # custom client theme (cloned from bootstrap)
+plugins/order/views/templates/standard/config.pdt         # order-form prefill override (see below)
+plugins/order/views/templates/standard/_falcon_prefill.snippet.html  # the appended block (re-apply source)
 ```
+
+## Order-form subdomain/theme capture (source=blesta_field)
+Goal: the customer's homepage choice (subdomain + theme) lands natively in Blesta
+`service_options` at checkout, so `blesta_poll.php` reads it as the PRIMARY source
+(`[source=blesta_field]`) instead of the `bridge.json` heuristic fallback.
+
+How it works:
+1. **DB flags** — the two configurable options `subdomain` (package_options.id 13)
+   and `theme` (id 14) in the "Trial Site Access" group are set
+   `addable=1, hidden=0, editable=0` (kept `disable_pricing=1, hide_on_invoice=1`,
+   so no price shows and nothing hits the invoice). Only `addable=1` is what makes
+   them render on the order **config** step and be captured to `service_options`
+   on checkout (Blesta's order config step filters options by `addable=1`; it does
+   NOT consult `hidden` or the option-group flags). The other credential fields
+   stay `hidden=1, addable=0` (poller-written, display-only).
+   Reproducible + idempotent via `bin/setup_blesta_options.sh` (per-field flags).
+2. **Prefill JS** — `config.pdt` has an appended `<script>` (see
+   `_falcon_prefill.snippet.html`). It reads `falcon_subdomain` / `falcon_theme` /
+   `falcon_token` from `sessionStorage` (set on the same-origin homepage), falling
+   back to the top-level URL query params (`?subdomain=&theme=&token=`), fills the
+   `configoptions[13]` / `configoptions[14]` inputs, makes them readonly, and hides
+   those rows so checkout stays clean. Config options load via AJAX into
+   `.package_options`, so the script uses a MutationObserver + interval to re-apply.
+3. **Fallback kept** — `bridge.json` still works; the poller prefers blesta_field.
+
+### Re-apply after a Blesta / order-plugin update (NOT upgrade-safe)
+The order plugin's `standard` template is licensed core and gets overwritten on
+update. To re-apply:
+```
+CFG=/home/falcon.codes/public_html/portal/plugins/order/views/templates/standard/config.pdt
+grep -q "Falcon of Codes prefill (BEGIN)" "$CFG" || {
+  cp -a "$CFG" "$CFG.falcon.bak.$(date +%Y%m%d%H%M%S)"
+  cat portal-custom/plugins/order/views/templates/standard/_falcon_prefill.snippet.html >> "$CFG"
+  chown falco6812:falco6812 "$CFG"
+}
+```
+(Or just copy the mirrored `portal-custom/.../standard/config.pdt` over the live
+file if the surrounding template is unchanged.) Re-run
+`bin/setup_blesta_options.sh` if the DB option flags were reset. If Blesta ever
+changes the option IDs (13/14), update `OPTS` in the snippet to match
+`package_options.id` for `subdomain`/`theme`.
 
 ## What we changed in the theme
 - `config.json`      — name "Falcon", author "Falcon of Codes".
@@ -39,13 +82,19 @@ template renders standalone). See `docs/blesta-theme.md` for the full diff + rat
 - `subdomain` — the reserved subdomain the customer claimed on the homepage.
 - `theme`     — homepage theme_id; mapped to a WP theme slug via
                 `falcon-provisioner/templates/meta.json`.
-These are also mirrored into the client-visible "Trial Site Access" configurable
-options so WP + FTP credentials render in the client service page.
+These are captured at order time (see "Order-form subdomain/theme capture" above)
+and live in the "Trial Site Access" configurable-option group; the poller also
+writes the WP + FTP credentials back into that group so they render in the client
+service page.
 
 ## Homepage order-form handoff
-`falcon-codes/script.js` builds the order URL with the reserved subdomain + theme as
-query params; `falcon-provisioner/web/api/subdomain/` handles availability + reservation
-(bridge.json), which `blesta_poll.php` then reconciles with the paid/active order.
+`falcon-codes/script.js` reserves the subdomain, stores `falcon_subdomain` /
+`falcon_theme` / `falcon_token` in `sessionStorage`, posts a `bridge.json` entry,
+and builds the order URL with the same values as query params. The order-form
+prefill JS (above) turns those into native `service_options`, so
+`blesta_poll.php` reads `[source=blesta_field]`. `bridge.json` remains a fallback
+for the (rare) case the fields didn't persist. **No script.js change was needed**
+for this — it already emits exactly the carrier the prefill consumes.
 
 > Do NOT commit the full Blesta core, `vendor/`, `uploads/`, `cache/`, or any
 > `config/database.php`. Reinstall core from the official Blesta zip (see docs/RECOVERY.md).

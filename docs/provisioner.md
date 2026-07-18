@@ -25,13 +25,17 @@ No Softaculous. CyberPanel CLI + WP-CLI + pure-ftpd MySQL backend only.
   `MYSQLCrypt=crypt`, `domain_id` = master website id). Login: FTP/FTPS explicit
   TLS to `<sub>.falcon.codes:21`.
 - **Client-area creds:** shown under Client area → Services → (service) →
-  "Configurable Options" via a hidden config-option group assigned to pkg 4.
+  "Configurable Options" in a config-option group assigned to pkg 4.
   Field→`option_pricing_id` map: `/opt/falcon-provisioner/templates/blesta_options.json`.
-  The poller upserts `service_options` rows on provision (subdomain, theme,
-  site_url, wp_admin_url, wp_user, wp_pass, ftp_access, ftp_user, ftp_pass).
+  The poller upserts `service_options` rows on provision (site_url, wp_admin_url,
+  wp_user, wp_pass, ftp_access, ftp_user, ftp_pass). These 7 stay `hidden=1,
+  addable=0` (display-only, poller-written).
 - **Custom order fields (bulletproof matching):** `subdomain` + `theme` are
-  config options on pkg 4; the poller reads them from `service_options` as the
-  PRIMARY source (`[source=blesta_field]` in the log), bridge/token as fallback.
+  `addable=1, hidden=0` config options (ids 13/14) on pkg 4, so the customer's
+  homepage choice is captured NATIVELY into `service_options` at checkout (the
+  order template's prefill JS fills + hides them — see `portal-custom/NOTES.md`).
+  The poller then reads them as the PRIMARY source (`[source=blesta_field]` in
+  the log); `bridge.json`/token remains the fallback.
 - One-time setup / re-sync: `bash /opt/falcon-provisioner/bin/setup_blesta_options.sh`
 
 ## API endpoints (served by OLS as user `falco6812`)
