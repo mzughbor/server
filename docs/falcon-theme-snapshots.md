@@ -60,6 +60,31 @@ sudo /opt/falcon-provisioner/bin/snapshot_capture.sh \
 - **Phase 3 restore:** import dump, then  
   `wp search-replace '{{SITE_URL}}' 'https://customer.falcon.codes' --all-tables`
 
+### Repair / diagnose templates
+
+`template_id` in Blesta admin AJAX is the **`falcon_wp_templates.id`** primary key
+(auto-increment). It is **not** a separate column — Capture / Provision Staging POST
+`{ template_id: <id> }`. The catalog and provisioner use **`slug`** (storage dir name);
+Blesta service `theme` must match that slug.
+
+Check all templates and common issues (active but no capture, stale `meta.json`):
+
+```bash
+ssh falcons '/opt/falcon-provisioner/bin/repair_templates.sh'
+```
+
+Fix one slug (updates `last_captured` + `meta.json`, preserves staging WP):
+
+```bash
+ssh falcons '/opt/falcon-provisioner/bin/repair_templates.sh --capture personal'
+```
+
+Capture every staging-ready row missing artifacts:
+
+```bash
+ssh falcons '/opt/falcon-provisioner/bin/repair_templates.sh --capture-all'
+```
+
 ### Admin UI
 
 Blesta → **Tools → Theme Snapshots**
