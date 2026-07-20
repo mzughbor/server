@@ -25,6 +25,10 @@ class FalconThemeSnapshotsController extends AppController
         $this->orig_structure_view = $this->structure->view;
         $this->structure->view = 'default';
 
+        // Restore admin portal structure (header, nav, sidebar widgets)
+        $this->structure->setDefaultView(APPDIR);
+        $this->structure->setView(null, $this->orig_structure_view);
+
         $this->company_id = Configure::get('Blesta.company_id');
     }
 }
