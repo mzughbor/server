@@ -253,7 +253,7 @@ main::before {
   color: var(--rebecca-purple);
 }
 
-/* Domain widget */
+/* Domain / subdomain widget */
 .domain-card {
   background: var(--white);
   border: 1px solid var(--border);
@@ -262,72 +262,59 @@ main::before {
   box-shadow: var(--shadow-card);
   margin-bottom: 24px;
 }
-.domain-row {
+.domain-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--text);
+}
+.hero-sub-picker,
+.sub-picker {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
-  padding: 6px 6px 6px 16px;
+  padding: 6px 6px 6px 14px;
 }
-.prefix { color: var(--text-muted); font-size: 14px; }
-#domain {
+.hero-sub-picker:focus-within,
+.sub-picker:focus-within {
+  border-color: var(--purple);
+  box-shadow: 0 0 0 3px rgba(147, 84, 183, 0.15);
+}
+.hero-sub-picker input,
+.sub-picker input {
   flex: 1;
   background: transparent;
   border: 0;
   outline: none;
   color: var(--text);
   font: 500 15px var(--font);
-  padding: 10px 4px;
+  padding: 8px 0;
   min-width: 0;
 }
-#domain::placeholder { color: #9CA3AF; }
-.domain-link {
-  display: block;
-  margin-top: 10px;
-  background: none;
-  border: 0;
+.sub-suffix {
   color: var(--text-muted);
-  font: inherit;
-  font-size: 13px;
-  cursor: pointer;
-  text-align: left;
-  padding: 0;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.domain-link:hover { color: var(--purple); }
-.domain-result {
-  margin-top: 14px;
-  padding: 14px 16px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--bg);
   font-size: 14px;
+  white-space: nowrap;
+}
+.domain-alt {
+  margin: 10px 0 0;
+  font-size: 13px;
+}
+.domain-soon {
   color: var(--text-muted);
-  animation: fadeUp 0.2s ease-out;
-}
-.domain-result.ok { border-color: rgba(147, 84, 183, 0.35); color: var(--text); }
-.domain-result code {
-  display: inline-block;
-  padding: 2px 8px;
-  background: var(--purple-pale);
-  border-radius: 6px;
-  font-family: ui-monospace, monospace;
-  font-size: 12px;
-  color: var(--purple);
-}
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: none; }
+  opacity: 0.65;
+  cursor: not-allowed;
+  text-decoration: line-through;
+  text-decoration-color: rgba(107, 114, 128, 0.5);
 }
 
-/* Phase 4: subdomain availability messages */
-.sub-msg { color: var(--text-muted); font-weight: 500; }
+.sub-msg { margin-top: 10px; font-size: 13px; min-height: 18px; color: var(--text-muted); font-weight: 500; }
 .sub-msg-ok { color: #1a7f4b; }
 .sub-msg-err { color: #c0392b; }
-.sub-picker:focus-within { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(147, 84, 183, 0.15); }
 #subClaimBtn[disabled] { opacity: 0.65; cursor: default; }
 
 .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 32px; }
@@ -957,21 +944,38 @@ main::before {
   gap: 10px;
 }
 .theme-actions .btn { width: 100%; }
-.theme-selected-note {
-  margin: 28px 0 0;
-  padding: 16px 20px;
-  background: var(--purple-pale);
-  border-radius: var(--radius);
-  font-size: 14px;
+.theme-actions-single {
+  grid-template-columns: 1fr;
+}
+.theme-actions-single .theme-preview-link {
+  grid-column: 1 / -1;
+}
+.theme-card.is-selected {
+  border-color: var(--purple);
+  box-shadow: 0 0 0 3px rgba(147, 84, 183, 0.2), var(--shadow-card);
+}
+.launch-cta-bar {
+  margin-top: 28px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, var(--purple-pale) 0%, var(--white) 100%);
+  border: 2px solid rgba(147, 84, 183, 0.35);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+.launch-cta-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.launch-cta-summary {
+  margin: 0;
+  font-size: 15px;
   color: var(--text);
-  text-align: center;
 }
-.theme-selected-note strong { color: var(--purple); }
-.theme-selected-note a {
-  color: var(--purple);
-  font-weight: 600;
-  margin-left: 6px;
-}
+.launch-cta-summary strong { color: var(--purple); }
+.launch-cta-sep { margin: 0 8px; color: var(--text-muted); }
 
 /* ── Pricing ── */
 .pricing { background: rgba(227, 218, 254, 0.35); }

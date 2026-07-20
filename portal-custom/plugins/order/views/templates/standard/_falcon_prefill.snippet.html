@@ -1,27 +1,17 @@
 <!-- ==== Falcon of Codes prefill (BEGIN) ============================================
-     Prefills the `subdomain` + `theme` configurable options on the order form
-     from the homepage handoff, so the customer's choice is captured NATIVELY
-     into Blesta `service_options` on checkout. The poller then reads them as the
-     PRIMARY source (log: [source=blesta_field]) instead of the bridge fallback.
+     Prefills subdomain + theme on the order config form from the homepage handoff,
+     then auto-submits to cart when ?auto=1 (skips manual "Continue" click).
 
-     Carrier: sessionStorage keys set on https://falcon.codes/ (same origin as
-     /portal), with the top-level URL query params (?subdomain=&theme=&token=) as
-     a fallback. Values are re-persisted to sessionStorage so they survive the
-     multi-step flow (config -> cart -> checkout).
+     Carrier: sessionStorage (same origin) + URL query params (?subdomain=&theme=&token=).
+     Config options load via AJAX — MutationObserver + interval re-apply until filled.
 
-     The two rows are filled, set readonly, and visually hidden to keep checkout
-     clean. All other credential fields stay hidden=1 (poller-written).
-
-     UPGRADE-SAFETY: this is a plugin template override (not upgrade-safe). The
-     canonical copy lives in the repo at
-       portal-custom/plugins/order/views/templates/standard/config.pdt
-     Re-apply after any Blesta/order-plugin update (see portal-custom/NOTES.md).
+     UPGRADE-SAFETY: plugin template override. Re-apply from portal-custom/ after
+     Blesta/order-plugin updates (see portal-custom/NOTES.md).
+     Option IDs: see falcon-provisioner/templates/blesta_packages.json
 ================================================================================ -->
 <script type="text/javascript">
 (function () {
-  // package_options.id for the two capturable options. The DOM input name uses
-  // the OPTION id (configoptions[<option_id>]); see blesta_options.json for the
-  // field -> option_pricing_id map the poller reads.
+  // package_options.id (DOM name: configoptions[<id>]). Sync with blesta_packages.json.
   var OPTS = { subdomain: 67, theme: 68 };
   var SS = { subdomain: "falcon_subdomain", theme: "falcon_theme", token: "falcon_token" };
 
@@ -32,8 +22,6 @@
   function ssGet(k) { try { return sessionStorage.getItem(k) || ""; } catch (e) { return ""; } }
   function ssSet(k, v) { try { if (v) sessionStorage.setItem(k, v); } catch (e) {} }
 
-  // sessionStorage first, then top-level URL query params; persist the fallback
-  // back so it survives config -> cart -> checkout (same origin).
   var vals = {
     subdomain: ssGet(SS.subdomain) || qs("subdomain"),
     theme: ssGet(SS.theme) || qs("theme"),
@@ -43,7 +31,9 @@
   ssSet(SS.theme, vals.theme);
   ssSet(SS.token, vals.token);
 
-  if (!vals.subdomain && !vals.theme) return; // nothing to carry
+  var wantAuto = qs("auto") === "1";
+
+  if (!vals.subdomain && !vals.theme && !wantAuto) return;
 
   function hideRow(input) {
     input.style.display = "none";
@@ -77,14 +67,40 @@
     return true;
   }
 
+  function findConfigForm() {
+    var po = document.querySelector(".package_options");
+    if (po) {
+      var f = po.closest("form");
+      if (f) return f;
+    }
+    return document.querySelector("form.disable-on-submit");
+  }
+
+  function tryAutoSubmit() {
+    if (!wantAuto) return;
+    var form = findConfigForm();
+    if (!form || form.dataset.falconAutoSubmitted) return;
+    var subOk = !vals.subdomain || document.querySelector('[name="configoptions[' + OPTS.subdomain + ']"]');
+    var themeOk = !vals.theme || document.querySelector('[name="configoptions[' + OPTS.theme + ']"]');
+    if (vals.subdomain && subOk) {
+      var s = document.querySelector('[name="configoptions[' + OPTS.subdomain + ']"]');
+      if (!s || !s.value) return;
+    }
+    if (vals.theme && themeOk) {
+      var t = document.querySelector('[name="configoptions[' + OPTS.theme + ']"]');
+      if (!t || !t.value) return;
+    }
+    form.dataset.falconAutoSubmitted = "1";
+    setTimeout(function () { form.submit(); }, 350);
+  }
+
   function apply() {
     var a = fill(OPTS.subdomain, vals.subdomain);
     var b = fill(OPTS.theme, vals.theme);
+    if (a || b) tryAutoSubmit();
     return a || b;
   }
 
-  // Config options load via AJAX into .package_options and re-render on term
-  // change, so observe the container and re-apply. Interval is a safety net.
   function boot() {
     apply();
     var container = document.querySelector(".package_options") || document.body;
@@ -93,7 +109,10 @@
       mo.observe(container, { childList: true, subtree: true });
     } catch (e) {}
     var tries = 0;
-    var t = setInterval(function () { apply(); if (++tries > 30) clearInterval(t); }, 400);
+    var t = setInterval(function () {
+      apply();
+      if (++tries > 40) clearInterval(t);
+    }, 400);
   }
 
   if (document.readyState === "loading") {

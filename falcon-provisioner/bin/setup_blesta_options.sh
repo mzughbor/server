@@ -15,6 +15,8 @@
 set -uo pipefail
 DB=falc_blesta
 PKG=4
+# All Falcon hosting packages that share subdomain/theme config options
+PKG_IDS="${FALCON_HOSTING_PKG_IDS:-4}"
 OPTPRICING=34   # pricings.id for 1 month @ $0 (reused for option pricing rows)
 MAP=/opt/falcon-provisioner/templates/blesta_options.json
 GROUP_NAME="Trial Site Access"
@@ -106,7 +108,9 @@ q "INSERT INTO package_option_groups (company_id,name,description,hidden,hide_op
    VALUES (1,'$GROUP_NAME','Your trial site access details.',1,1);"
 GID=$(q "SELECT id FROM package_option_groups WHERE company_id=1 AND name='$GROUP_NAME' ORDER BY id DESC LIMIT 1;")
 echo "group id=$GID"
-q "INSERT INTO package_option (package_id,option_group_id,\`order\`) VALUES ($PKG,$GID,0);"
+for _pkg in $(echo "$PKG_IDS" | tr ',' ' '); do
+  q "INSERT IGNORE INTO package_option (package_id,option_group_id,\`order\`) VALUES ($_pkg,$GID,0);"
+done
 
 # field|label|type|addable|hidden   (order preserved for display)
 #   addable=1,hidden=0  -> captured natively at ORDER time (customer's choice

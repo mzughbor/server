@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Falcon of Codes — Launch your website on your domain in minutes, from $1/mo</title>
-    <meta name="description" content="Falcon of Codes helps you launch a professional website on your own domain in under an hour. Connect DNS, pick a theme, customize your brand, and publish with managed hosting — plans from $1/month. Free 24-hour subdomain trial." />
+    <title>Falcon of Codes — Launch your website in minutes, from $5/mo</title>
+    <meta name="description" content="Falcon of Codes helps you launch a professional website in under an hour. Pick a subdomain, choose a theme, and publish with managed hosting — plans from $5/month. Free 24-hour trial on falcon.codes." />
     <meta name="keywords" content="website builder, custom domain hosting, launch website fast, no-code website, small business website, cheap website hosting, falcon.codes, $1 website, managed hosting" />
     <meta name="author" content="Falcon of Codes" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
@@ -58,8 +58,8 @@
             "operatingSystem": "Web",
             "offers": {
               "@type": "AggregateOffer",
-              "lowPrice": "1",
-              "highPrice": "6",
+              "lowPrice": "5",
+              "highPrice": "13",
               "priceCurrency": "USD",
               "offerCount": "3"
             },
@@ -151,25 +151,25 @@
             <p class="hero-lede">
               Falcon of Codes is a simple website builder with managed hosting. Ship a polished site
               on your own domain in under an hour — pick a theme, connect DNS, hit publish.
-              Plans from <strong>$1/month</strong>. Free 24-hour trial on a <code>falcon.codes</code> subdomain.
+              Plans from <strong>$5/month</strong>. Free 24-hour trial on a <code>falcon.codes</code> subdomain.
             </p>
 
-            <form class="domain-card" id="domainForm" novalidate>
-              <div class="domain-row">
-                <label for="domain" class="sr-only">Your domain</label>
-                <span class="prefix">https://</span>
-                <input id="domain" type="text" autocomplete="off" placeholder="mybrand.com" spellcheck="false" />
-                <button class="btn btn-primary" type="submit">Check</button>
+            <div class="domain-card" id="domainForm">
+              <label for="subInput" class="domain-label">Pick your free subdomain</label>
+              <div class="sub-picker hero-sub-picker">
+                <input id="subInput" type="text" autocomplete="off" spellcheck="false" placeholder="mybrand" aria-label="Your subdomain" />
+                <span class="sub-suffix">.falcon.codes</span>
+                <button type="button" class="btn btn-primary" id="subClaimBtn" data-mode="check">Check</button>
               </div>
-              <button type="button" class="domain-link" id="noDomainBtn">
-                I don't have a domain → try a free subdomain for 24h
-              </button>
-              <div class="domain-result" id="domainResult" hidden></div>
-            </form>
+              <div id="subMsg" class="sub-msg" role="status" aria-live="polite"></div>
+              <p class="domain-alt">
+                <span class="domain-soon" aria-disabled="true" title="Custom domain registration coming soon">Get a new domain — Coming soon</span>
+              </p>
+            </div>
 
             <div class="hero-actions">
               <a class="btn btn-primary btn-lg" href="https://falcon.codes/portal/order/" data-order-cta>
-                Start Free Trial
+                <span data-cta-label>Start Free Trial</span>
                 <span class="btn-icon" aria-hidden="true">→</span>
               </a>
               <a class="btn btn-outline btn-lg" href="#themes">
@@ -383,12 +383,18 @@
             <p>Theme demos are being prepared. You can still <a href="https://falcon.codes/portal/order/">start your free trial</a> and pick a theme at checkout.</p>
           </div>
 
-          <p class="theme-scroll-hint" id="themeScrollHint">Scroll or use arrows to browse all themes</p>
+          <p class="theme-scroll-hint" id="themeScrollHint">Scroll or use arrows to browse all themes — click a card to select</p>
 
-          <p class="theme-selected-note" id="themeSelectedNote" hidden>
-            Selected theme: <strong id="themeSelectedName"></strong>.
-            <a id="launchLink" href="https://falcon.codes/portal/order/">Continue to launch →</a>
-          </p>
+          <div class="launch-cta-bar" id="launchCtaBar" hidden>
+            <div class="launch-cta-inner">
+              <p class="launch-cta-summary">
+                <span id="launchCtaSub">—</span>
+                <span class="launch-cta-sep">·</span>
+                Theme: <strong id="launchCtaTheme">—</strong>
+              </p>
+              <button type="button" class="btn btn-primary btn-lg" id="launchCtaBtn">Start Free Trial →</button>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -397,49 +403,49 @@
         <div class="container">
           <div class="section-head-center">
             <span class="kicker">PRICING</span>
-            <h2 id="pricing-heading">Simple Hosting Plans From <span class="text-purple">$1/Month.</span></h2>
-            <p>No hidden fees. Cancel anytime. Free 24h trial on <code>falcon.codes</code> subdomains.</p>
+            <h2 id="pricing-heading">Simple Hosting Plans From <span class="text-purple">$5/Month.</span></h2>
+            <p>No hidden fees. Cancel anytime. Try free for 24 hours on a <code>falcon.codes</code> subdomain first.</p>
           </div>
 
           <div class="plans">
             <article class="plan">
               <h3>Starter</h3>
-              <div class="price"><span class="cur">$</span><span class="amt">1</span><span class="per">/mo</span></div>
-              <p class="plan-tag">A simple one-page site on a subdomain.</p>
+              <div class="price"><span class="cur">$</span><span class="amt">5</span><span class="per">/mo</span></div>
+              <p class="plan-tag">Your brand on a <code>falcon.codes</code> subdomain.</p>
               <ul>
                 <li>1 site · <code>yourname.falcon.codes</code></li>
                 <li>All website themes</li>
                 <li>Basic analytics</li>
                 <li>HTTPS included</li>
               </ul>
-              <a class="btn btn-outline" href="https://falcon.codes/portal/order/">Get Starter</a>
+              <a class="btn btn-outline" href="https://falcon.codes/portal/order/" data-order-cta data-plan="starter">Get Starter</a>
             </article>
 
             <article class="plan plan-featured">
               <div class="badge">Most popular</div>
               <h3>Maker</h3>
-              <div class="price"><span class="cur">$</span><span class="amt">3</span><span class="per">/mo</span></div>
-              <p class="plan-tag">Bring your own domain.</p>
+              <div class="price"><span class="cur">$</span><span class="amt">9</span><span class="per">/mo</span></div>
+              <p class="plan-tag">Connect your own custom domain.</p>
               <ul>
                 <li>1 custom domain</li>
                 <li>All website themes</li>
                 <li>Contact forms</li>
                 <li>Remove Falcon badge</li>
               </ul>
-              <a class="btn btn-primary" href="https://falcon.codes/portal/order/">Get Maker</a>
+              <a class="btn btn-primary" href="https://falcon.codes/portal/order/" data-order-cta data-plan="maker">Get Maker</a>
             </article>
 
             <article class="plan">
               <h3>Pro</h3>
-              <div class="price"><span class="cur">$</span><span class="amt">6</span><span class="per">/mo</span></div>
-              <p class="plan-tag">For small businesses.</p>
+              <div class="price"><span class="cur">$</span><span class="amt">13</span><span class="per">/mo</span></div>
+              <p class="plan-tag">For growing small businesses.</p>
               <ul>
-                <li>3 custom domains</li>
+                <li>Up to 3 custom domains</li>
                 <li>Priority publishing</li>
                 <li>SEO tools</li>
                 <li>Email support</li>
               </ul>
-              <a class="btn btn-outline" href="https://falcon.codes/portal/order/">Get Pro</a>
+              <a class="btn btn-outline" href="https://falcon.codes/portal/order/" data-order-cta data-plan="pro">Get Pro</a>
             </article>
           </div>
         </div>
@@ -527,7 +533,7 @@
         </nav>
         </div>
         <div class="container footer-bottom">
-          <span>© 2026 Falcon of Codes. Launch websites on your domain — from $1/month.</span>
+          <span>© 2026 Falcon of Codes. Launch websites on your domain — from $5/month.</span>
           <nav class="footer-legal" aria-label="Legal">
             <a href="#">Privacy Policy</a>
             <a href="#">Terms of Service</a>
@@ -544,7 +550,7 @@
               <h2 id="cta-heading">Ready To Launch Your Website on Your Own Domain?</h2>
               <p>Start with a free subdomain trial or go live on a custom domain today. Themes, hosting, and HTTPS included.</p>
             </div>
-            <a class="btn btn-white" href="https://falcon.codes/portal/order/">
+            <a class="btn btn-white" href="https://falcon.codes/portal/order/" data-order-cta>
               Start Your Project <span aria-hidden="true">→</span>
             </a>
           </div>

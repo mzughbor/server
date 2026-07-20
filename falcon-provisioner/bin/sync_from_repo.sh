@@ -11,7 +11,7 @@ OWNER="falco6812:falco6812"
 
 echo ">> Homepage -> public_html (no --delete; keeps portal/ + api/)"
 rsync -a falcon-codes/ "$SSH":/home/falcon.codes/public_html/
-ssh "$SSH" "chown -R $OWNER /home/falcon.codes/public_html/{index.html,script.js,styles.css,assets}"
+ssh "$SSH" "chown -R $OWNER /home/falcon.codes/public_html/{index.html,script.js,styles.css,packages.json,assets}"
 
 echo ">> Subdomain API -> public_html/api"
 rsync -a falcon-provisioner/web/api/ "$SSH":/home/falcon.codes/public_html/api/

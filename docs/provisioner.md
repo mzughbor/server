@@ -40,6 +40,9 @@ No Softaculous. CyberPanel CLI + WP-CLI + pure-ftpd MySQL backend only.
   The poller then reads them as the PRIMARY source (`[source=blesta_field]` in
   the log); `bridge.json`/token remains the fallback.
 - One-time setup / re-sync: `bash /opt/falcon-provisioner/bin/setup_blesta_options.sh`
+- Hosting packages ($0 trial + $5/$9/$13 paid): `bash /opt/falcon-provisioner/bin/setup_packages.sh`
+  Emits `/opt/falcon-provisioner/templates/blesta_packages.json` and copies to
+  `https://falcon.codes/packages.json` for the homepage order URLs.
 
 ## API endpoints (served by OLS as user `falco6812`)
 - `GET  https://falcon.codes/api/subdomain/check?name=NAME`
