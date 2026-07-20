@@ -21,7 +21,7 @@ $lang['AdminMain.index.action_deactivate'] = 'Deactivate';
 $lang['AdminMain.index.action_edit'] = 'Edit';
 $lang['AdminMain.index.action_delete'] = 'Delete';
 $lang['AdminMain.index.confirm_delete'] = 'Delete "%1$s" from the catalog? This removes the database record and any captured files in storage.';
-$lang['AdminMain.index.no_templates'] = 'No WordPress templates yet. Add a staging site, then capture a snapshot.';
+$lang['AdminMain.index.no_templates'] = 'No WordPress templates yet. Register a staging site, then run Capture to publish it to the catalog.';
 
 $lang['AdminMain.add.boxtitle'] = 'Add WordPress Staging Template';
 $lang['AdminMain.add.field_slug'] = 'Slug';
@@ -40,7 +40,7 @@ $lang['AdminMain.edit.hint_slug'] = 'Slug cannot be changed after creation (used
 $lang['AdminMain.edit.submit'] = 'Save Changes';
 
 $lang['AdminMain.blesta.boxtitle'] = 'Blesta Client Theme Snapshots';
-$lang['AdminMain.blesta.phase_notice'] = 'Secondary feature: backup of Blesta branding files (overrides.css, structure.pdt, etc.). Capture UI arrives in a later phase.';
+$lang['AdminMain.blesta.phase_notice'] = 'Phase 1 placeholder: Blesta client theme file snapshots (overrides.css, structure.pdt, etc.) will be manageable here in a later release. Use the WordPress Templates tab for catalog capture today.';
 $lang['AdminMain.blesta.heading_label'] = 'Label';
 $lang['AdminMain.blesta.heading_template'] = 'Template';
 $lang['AdminMain.blesta.heading_files'] = 'Files';
