@@ -47,7 +47,7 @@ class FalconThemeSnapshotFiles extends FalconThemeSnapshotsModel
             'content' => $vars['content'],
             'file_size' => strlen($vars['content']),
             'is_customized' => (int) ($vars['is_customized'] ?? 0),
-            'date_created' => date('c'),
+            'date_created' => $this->mysqlNow(),
         ];
 
         $this->Record->insert('falcon_theme_snapshot_files', $fields);

@@ -34,6 +34,27 @@ q "DELETE FROM order_settings WHERE company_id=1 AND \`key\` IN ('antifraud','an
 echo "order_forms(id=1): $(q "SELECT CONCAT('manual_review=',manual_review,' captcha=',require_captcha,' tos=',require_tos) FROM order_forms WHERE id=1;")"
 echo "packages(id=$PKG): manual_activation=$(q "SELECT manual_activation FROM packages WHERE id=$PKG;") module_id=$(q "SELECT module_id FROM packages WHERE id=$PKG;")"
 
+echo "=== Section B: ensure Blesta system cron runs (activates paid-pending services) ==="
+BLESTA_ROOT="${BLESTA_ROOT:-/home/falcon.codes/public_html/portal}"
+CRON_D=/etc/cron.d/falcon-provisioner
+if [ -f /opt/falcon-provisioner/falcon-provisioner.cron ]; then
+  cp /opt/falcon-provisioner/falcon-provisioner.cron "$CRON_D"
+  chmod 644 "$CRON_D"
+  echo "installed $CRON_D (Blesta cron */5 + poller */1)"
+elif [ -d "$BLESTA_ROOT" ]; then
+  cat > "$CRON_D" <<CRON
+# Falcon of Codes - Blesta system cron + provisioner poller
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+*/5 * * * * root cd $BLESTA_ROOT && /usr/bin/php index.php cron >/dev/null 2>&1
+* * * * * root /usr/bin/php /opt/falcon-provisioner/bin/blesta_poll.php >/dev/null 2>&1
+CRON
+  chmod 644 "$CRON_D"
+  echo "installed $CRON_D (inline fallback)"
+else
+  echo "WARN: Blesta root not found; cron not installed"
+fi
+
 echo "=== Purge any prior Falcon option group/options (idempotent re-run) ==="
 mysql "$DB" <<SQL
 DELETE pop FROM package_option_pricing pop

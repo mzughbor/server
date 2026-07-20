@@ -16,7 +16,10 @@ No Softaculous. CyberPanel CLI + WP-CLI + pure-ftpd MySQL backend only.
   Keys: `order_forms.manual_review=0` (form id 1), `packages.manual_activation=0`
   (pkg 4), `company_settings.email_verification=false`,
   `company_settings.prevent_unverified_payments=false`,
-  `order_settings.antifraud` removed. Cron provisions any Active pkg-4 service.
+  `order_settings.antifraud` removed. Blesta system cron (`index.php cron`, every
+  5 min via `/etc/cron.d/falcon-provisioner`) runs `provision_pending_services`
+  so paid $0 services flip Active without staff. Falcon poller cron provisions
+  any Active pkg-4 service every minute.
 - **Per-site account = pure-ftpd VIRTUAL FTP/FTPS user** chrooted to the site
   docroot, mapped to unprivileged uid/gid `falco6812` (5003). NOT root, NOT the
   CyberPanel admin. (CyberPanel has no per-customer :8090 panel login for a child

@@ -47,7 +47,7 @@ class FalconWpTemplates extends FalconThemeSnapshotsModel
             'storage_dir' => self::STORAGE_ROOT . DS . $vars['slug'],
             'active' => (int) ($vars['active'] ?? 0),
             'sort_order' => (int) ($vars['sort_order'] ?? 0),
-            'date_created' => date('c'),
+            'date_created' => $this->mysqlNow(),
         ];
 
         $this->Record->insert('falcon_wp_templates', $fields);
@@ -82,7 +82,7 @@ class FalconWpTemplates extends FalconThemeSnapshotsModel
         if (isset($fields['sort_order'])) {
             $fields['sort_order'] = (int) $fields['sort_order'];
         }
-        $fields['date_updated'] = date('c');
+        $fields['date_updated'] = $this->mysqlNow();
 
         $this->Record->where('id', '=', $template_id)->update('falcon_wp_templates', $fields);
 
@@ -180,8 +180,8 @@ class FalconWpTemplates extends FalconThemeSnapshotsModel
         }
 
         $this->Record->where('id', '=', $template_id)->update('falcon_wp_templates', [
-            'last_captured' => date('c'),
-            'date_updated' => date('c'),
+            'last_captured' => $this->mysqlNow(),
+            'date_updated' => $this->mysqlNow(),
         ]);
 
         $this->syncMetaActive($template->slug, (bool) $template->active, $template);

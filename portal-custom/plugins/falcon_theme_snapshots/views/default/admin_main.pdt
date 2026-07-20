@@ -1,0 +1,75 @@
+        <?php echo (isset($message) ? $message : null); ?>
+
+        <ul class="nav nav-tabs">
+            <li class="active"><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/'); ?>"><?php $this->_('AdminMain.index.tab_wp'); ?></a></li>
+            <li><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/blesta/'); ?>"><?php $this->_('AdminMain.index.tab_blesta'); ?></a></li>
+        </ul>
+
+        <div class="pad">
+            <p>
+                <?php $this->_('AdminMain.index.catalog_hint'); ?>
+                <a href="<?php echo $this->Html->safe($catalog_url ?? 'https://falcon.codes/api/themes/catalog.php'); ?>" target="_blank" rel="noopener"><?php echo $this->Html->safe($catalog_url ?? ''); ?></a>
+            </p>
+            <p><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/add/'); ?>" class="btn btn-primary"><i class="fas fa-plus"></i> <?php $this->_('AdminMain.index.link_add'); ?></a></p>
+        </div>
+
+        <?php
+        $this->Widget->clear();
+        $this->Widget->create($this->_('AdminMain.index.boxtitle_wp', true), ['id' => 'falcon_wp_templates']);
+        ?>
+        <div class="inner">
+        <?php if (!empty($templates)) { ?>
+            <table class="table">
+                <tr class="heading_row">
+                    <td><span><?php $this->_('AdminMain.index.heading_name'); ?></span></td>
+                    <td><span><?php $this->_('AdminMain.index.heading_slug'); ?></span></td>
+                    <td><span><?php $this->_('AdminMain.index.heading_staging'); ?></span></td>
+                    <td><span><?php $this->_('AdminMain.index.heading_active'); ?></span></td>
+                    <td><span><?php $this->_('AdminMain.index.heading_captured'); ?></span></td>
+                    <td><span><?php $this->_('AdminMain.index.heading_options'); ?></span></td>
+                </tr>
+                <?php foreach ($templates as $i => $template) { ?>
+                <tr class="<?php echo ($i % 2 == 1) ? 'odd_row' : ''; ?>">
+                    <td><?php echo $this->Html->safe($template->name ?? ''); ?></td>
+                    <td><code><?php echo $this->Html->safe($template->slug ?? ''); ?></code></td>
+                    <td><?php echo $this->Html->safe($template->staging_domain ?? ''); ?></td>
+                    <td><?php echo !empty($template->active) ? $this->_('AdminMain.index.yes', true) : $this->_('AdminMain.index.no', true); ?></td>
+                    <td><?php echo !empty($template->last_captured) ? $this->Date->cast($template->last_captured) : '—'; ?></td>
+                    <td>
+                        <a href="#" class="capture-template btn btn-default btn-xs" data-id="<?php echo (int) ($template->id ?? 0); ?>"><?php $this->_('AdminMain.index.action_capture'); ?></a>
+                        <?php if (!empty($template->active)) { ?>
+                        <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/activate/' . (int) $template->id . '/0/'); ?>" class="btn btn-default btn-xs"><?php $this->_('AdminMain.index.action_deactivate'); ?></a>
+                        <?php } else { ?>
+                        <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/activate/' . (int) $template->id . '/1/'); ?>" class="btn btn-success btn-xs"><?php $this->_('AdminMain.index.action_activate'); ?></a>
+                        <?php } ?>
+                    </td>
+                </tr>
+                <?php } ?>
+            </table>
+        <?php } else { ?>
+            <p><?php $this->_('AdminMain.index.no_templates'); ?></p>
+        <?php } ?>
+        </div>
+        <?php $this->Widget->end(); ?>
+
+        <script type="text/javascript">
+        $(document).ready(function() {
+            $('.capture-template').on('click', function(e) {
+                e.preventDefault();
+                var id = $(this).data('id');
+                var $btn = $(this);
+                $btn.prop('disabled', true);
+                $.post('<?php echo $this->Html->safe($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/capture/'); ?>', { template_id: id })
+                    .done(function(data) {
+                        if (data.success) {
+                            alert(data.message || 'Capture complete.');
+                            location.reload();
+                        } else {
+                            alert(data.message || 'Capture failed.');
+                        }
+                    })
+                    .fail(function() { alert('Capture request failed.'); })
+                    .always(function() { $btn.prop('disabled', false); });
+            });
+        });
+        </script>

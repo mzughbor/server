@@ -26,4 +26,14 @@ class FalconThemeSnapshotsModel extends AppModel
         Loader::loadComponents($this, ['Input', 'Record']);
         Loader::loadHelpers($this, ['Date']);
     }
+
+    /**
+     * MySQL datetime column value (Y-m-d H:i:s).
+     *
+     * @return string
+     */
+    protected function mysqlNow()
+    {
+        return date('Y-m-d H:i:s');
+    }
 }

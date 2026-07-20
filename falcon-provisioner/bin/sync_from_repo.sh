@@ -19,7 +19,7 @@ ssh "$SSH" "chown -R $OWNER /home/falcon.codes/public_html/api"
 
 echo ">> Provisioner -> /opt/falcon-provisioner (no secrets)"
 rsync -a --exclude='secrets' \
-  falcon-provisioner/bin falcon-provisioner/templates falcon-provisioner/README.txt \
+  falcon-provisioner/bin falcon-provisioner/templates falcon-provisioner/README.txt falcon-provisioner/falcon-provisioner.cron \
   "$SSH":/opt/falcon-provisioner/
 ssh "$SSH" 'chmod +x /opt/falcon-provisioner/bin/*.sh /opt/falcon-provisioner/bin/*.php 2>/dev/null || true'
 

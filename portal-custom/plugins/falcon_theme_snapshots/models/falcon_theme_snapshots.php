@@ -53,7 +53,7 @@ class FalconThemeSnapshots extends FalconThemeSnapshotsModel
             'file_count' => 0,
             'total_bytes' => 0,
             'status' => $vars['status'],
-            'date_created' => date('c'),
+            'date_created' => $this->mysqlNow(),
         ];
 
         $this->Record->insert('falcon_theme_snapshots', $fields);
@@ -84,7 +84,7 @@ class FalconThemeSnapshots extends FalconThemeSnapshotsModel
             $vars,
             array_flip(['label', 'template_dir', 'blesta_version', 'staff_id', 'notes', 'file_count', 'total_bytes', 'status'])
         );
-        $fields['date_updated'] = date('c');
+        $fields['date_updated'] = $this->mysqlNow();
 
         $this->Record->where('id', '=', $snapshot_id)->update('falcon_theme_snapshots', $fields);
         return $this->get($snapshot_id);
