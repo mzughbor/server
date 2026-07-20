@@ -76,7 +76,13 @@ After deploying plugin **v2.0.0**, upgrade the installed plugin:
 GET https://falcon.codes/api/themes/catalog.php
 ```
 
-Returns active templates from `meta.json` files (`active: true`). Used by the homepage theme picker.
+Returns active templates from **`falcon_wp_templates`** (`active = 1`, capture files present).
+Used by the homepage theme picker. Edits in Blesta **Theme Snapshots** admin are live after
+cache expiry (60s). One-time VPS setup for DB read access:
+
+```bash
+ssh falcons 'bash -s' < falcon-provisioner/bin/setup_catalog_db.sh
+```
 
 Example response:
 
@@ -140,5 +146,6 @@ Plugin code updates do **not** require reinstall; bump `config.json` version and
 portal-custom/plugins/falcon_theme_snapshots/   # Blesta plugin
 falcon-provisioner/bin/snapshot_capture.sh
 falcon-provisioner/bin/setup_template_storage.sh
+falcon-provisioner/bin/setup_catalog_db.sh
 falcon-provisioner/web/api/themes/catalog.php
 ```
