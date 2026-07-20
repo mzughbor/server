@@ -10,12 +10,17 @@ $lang['AdminMain.index.heading_slug'] = 'Slug';
 $lang['AdminMain.index.heading_staging'] = 'Staging Domain';
 $lang['AdminMain.index.heading_active'] = 'Catalog';
 $lang['AdminMain.index.heading_captured'] = 'Last Capture';
-$lang['AdminMain.index.heading_options'] = 'Options';
+$lang['AdminMain.index.heading_sort'] = 'Sort';
+$lang['AdminMain.index.heading_thumb'] = 'Preview';
+$lang['AdminMain.index.heading_options'] = 'Actions';
 $lang['AdminMain.index.yes'] = 'Active';
 $lang['AdminMain.index.no'] = 'Inactive';
 $lang['AdminMain.index.action_capture'] = 'Capture';
 $lang['AdminMain.index.action_activate'] = 'Activate';
 $lang['AdminMain.index.action_deactivate'] = 'Deactivate';
+$lang['AdminMain.index.action_edit'] = 'Edit';
+$lang['AdminMain.index.action_delete'] = 'Delete';
+$lang['AdminMain.index.confirm_delete'] = 'Delete "%1$s" from the catalog? This removes the database record and any captured files in storage.';
 $lang['AdminMain.index.no_templates'] = 'No WordPress templates yet. Add a staging site, then capture a snapshot.';
 
 $lang['AdminMain.add.boxtitle'] = 'Add WordPress Staging Template';
@@ -30,6 +35,10 @@ $lang['AdminMain.add.hint_staging'] = 'Existing WordPress child domain (e.g. pre
 $lang['AdminMain.add.submit'] = 'Add Template';
 $lang['AdminMain.add.cancel'] = 'Cancel';
 
+$lang['AdminMain.edit.boxtitle'] = 'Edit WordPress Staging Template';
+$lang['AdminMain.edit.hint_slug'] = 'Slug cannot be changed after creation (used in storage path and catalog).';
+$lang['AdminMain.edit.submit'] = 'Save Changes';
+
 $lang['AdminMain.blesta.boxtitle'] = 'Blesta Client Theme Snapshots';
 $lang['AdminMain.blesta.phase_notice'] = 'Secondary feature: backup of Blesta branding files (overrides.css, structure.pdt, etc.). Capture UI arrives in a later phase.';
 $lang['AdminMain.blesta.heading_label'] = 'Label';
@@ -39,7 +48,10 @@ $lang['AdminMain.blesta.heading_date'] = 'Created';
 $lang['AdminMain.blesta.no_snapshots'] = 'No Blesta theme snapshots yet.';
 
 $lang['AdminMain.!success.template_added'] = 'Template registered. Run Capture when the staging site is ready.';
+$lang['AdminMain.!success.template_updated'] = 'Template updated successfully.';
+$lang['AdminMain.!success.template_deleted'] = 'Template deleted from the catalog.';
 $lang['AdminMain.!success.capture'] = 'Snapshot captured successfully.';
 $lang['AdminMain.!success.activated'] = 'Template is now active in the public catalog.';
 $lang['AdminMain.!success.deactivated'] = 'Template removed from the public catalog.';
 $lang['AdminMain.!error.capture.failed'] = 'Capture failed.';
+$lang['AdminMain.!error.delete.failed'] = 'Unable to delete the template.';

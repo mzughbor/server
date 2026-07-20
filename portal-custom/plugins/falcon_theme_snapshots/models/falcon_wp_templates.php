@@ -86,11 +86,12 @@ class FalconWpTemplates extends FalconThemeSnapshotsModel
 
         $this->Record->where('id', '=', $template_id)->update('falcon_wp_templates', $fields);
 
-        if (isset($fields['active'])) {
-            $this->syncMetaActive($template->slug, (bool) $fields['active']);
+        $updated = $this->get($template_id);
+        if ($updated) {
+            $this->syncMetaActive($template->slug, (bool) $updated->active, $updated);
         }
 
-        return $this->get($template_id);
+        return $updated;
     }
 
     /**
@@ -228,8 +229,30 @@ class FalconWpTemplates extends FalconThemeSnapshotsModel
             return false;
         }
 
+        $slug = $template->slug;
         $this->Record->from('falcon_wp_templates')->where('id', '=', $template_id)->delete();
+        $this->removeStorageDir($slug);
+
         return true;
+    }
+
+    /**
+     * Remove captured template files when the catalog row is deleted.
+     *
+     * @param string $slug
+     * @return bool
+     */
+    private function removeStorageDir($slug)
+    {
+        $dir = self::STORAGE_ROOT . DS . $slug;
+        if (!is_dir($dir)) {
+            return true;
+        }
+
+        $cmd = sprintf('sudo rm -rf %s 2>&1', escapeshellarg($dir));
+        exec($cmd, $output, $code);
+
+        return $code === 0;
     }
 
     /**

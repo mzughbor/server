@@ -95,6 +95,58 @@ class AdminMain extends FalconThemeSnapshotsController
     }
 
     /**
+     * Update an existing staging template.
+     */
+    public function edit()
+    {
+        if (!isset($this->get[0]) || !($template = $this->FalconWpTemplates->get((int) $this->get[0]))) {
+            $this->redirect($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/');
+        }
+
+        if ((int) $template->company_id !== (int) $this->company_id) {
+            $this->redirect($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/');
+        }
+
+        if (!empty($this->post)) {
+            $this->FalconWpTemplates->edit($template->id, $this->post);
+
+            if (($errors = $this->FalconWpTemplates->errors())) {
+                $this->setMessage('error', $errors, false, null, false);
+                $this->set('vars', (object) array_merge((array) $template, $this->post));
+            } else {
+                $this->flashMessage('message', Language::_('AdminMain.!success.template_updated', true), null, false);
+                $this->redirect($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/');
+            }
+        } else {
+            $this->set('vars', $template);
+        }
+
+        $this->set('template', $template);
+    }
+
+    /**
+     * Remove a template from the catalog and optional storage.
+     */
+    public function delete()
+    {
+        if (!isset($this->get[0]) || !($template = $this->FalconWpTemplates->get((int) $this->get[0]))) {
+            $this->redirect($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/');
+        }
+
+        if ((int) $template->company_id !== (int) $this->company_id) {
+            $this->redirect($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/');
+        }
+
+        if (!$this->FalconWpTemplates->delete($template->id)) {
+            $this->flashMessage('error', Language::_('AdminMain.!error.delete.failed', true), null, false);
+        } else {
+            $this->flashMessage('message', Language::_('AdminMain.!success.template_deleted', true), null, false);
+        }
+
+        $this->redirect($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/');
+    }
+
+    /**
      * Toggle catalog visibility.
      */
     public function activate()

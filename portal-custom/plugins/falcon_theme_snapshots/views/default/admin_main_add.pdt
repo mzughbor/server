@@ -1,5 +1,10 @@
         <?php echo (isset($message) ? $message : null); ?>
 
+        <ul class="nav nav-tabs">
+            <li class="active"><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/'); ?>"><?php $this->_('AdminMain.index.tab_wp'); ?></a></li>
+            <li><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/blesta/'); ?>"><?php $this->_('AdminMain.index.tab_blesta'); ?></a></li>
+        </ul>
+
         <?php
         $this->Widget->clear();
         $this->Widget->create($this->_('AdminMain.add.boxtitle', true), ['id' => 'falcon_wp_template_add']);
