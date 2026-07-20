@@ -28,6 +28,11 @@ rsync -a portal-custom/app/views/client/falcon/ \
   "$SSH":/home/falcon.codes/public_html/portal/app/views/client/falcon/
 ssh "$SSH" "chown -R $OWNER /home/falcon.codes/public_html/portal/app/views/client/falcon"
 
+echo ">> Blesta custom plugins -> portal/plugins (does NOT touch stock plugins)"
+rsync -a portal-custom/plugins/ \
+  "$SSH":/home/falcon.codes/public_html/portal/plugins/
+ssh "$SSH" "chown -R $OWNER /home/falcon.codes/public_html/portal/plugins/falcon_theme_snapshots 2>/dev/null || true"
+
 echo ">> Docs -> /srv/falcon-docs"
 rsync -a docs/ "$SSH":/srv/falcon-docs/
 

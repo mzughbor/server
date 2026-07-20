@@ -5,6 +5,7 @@ Tracked artifacts:
 
 ```
 app/views/client/falcon/                                  # custom client theme (cloned from bootstrap)
+plugins/falcon_theme_snapshots/                           # theme snapshot plugin (Phase 1: schema + skeleton)
 plugins/order/views/templates/standard/config.pdt         # order-form prefill override (see below)
 plugins/order/views/templates/standard/_falcon_prefill.snippet.html  # the appended block (re-apply source)
 ```

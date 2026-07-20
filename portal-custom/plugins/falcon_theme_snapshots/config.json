@@ -1,0 +1,11 @@
+{
+    "version": "1.0.0",
+    "name": "FalconThemeSnapshotsPlugin.name",
+    "description": "FalconThemeSnapshotsPlugin.description",
+    "authors": [
+        {
+            "name": "Falcon of Codes",
+            "url": "https://falcon.codes"
+        }
+    ]
+}

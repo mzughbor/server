@@ -1,0 +1,49 @@
+        <?php
+        echo (isset($message) ? $message : null);
+        ?>
+
+        <div class="alert alert-info">
+            <?php $this->_('AdminMain.index.phase_notice'); ?>
+        </div>
+
+        <?php
+        $this->Widget->clear();
+        $this->Widget->create($this->_('AdminMain.index.boxtitle', true), ['id' => 'falcon_theme_snapshots']);
+        ?>
+        <div class="inner">
+        <?php
+        if ((isset($snapshots) ? $snapshots : false) && ($num_snapshots = count($snapshots)) > 0) {
+        ?>
+            <table class="table">
+                <tr class="heading_row">
+                    <td><span><?php $this->_('AdminMain.index.heading_label'); ?></span></td>
+                    <td><span><?php $this->_('AdminMain.index.heading_template'); ?></span></td>
+                    <td><span><?php $this->_('AdminMain.index.heading_blesta_version'); ?></span></td>
+                    <td><span><?php $this->_('AdminMain.index.heading_file_count'); ?></span></td>
+                    <td><span><?php $this->_('AdminMain.index.heading_date_created'); ?></span></td>
+                </tr>
+                <?php
+                for ($i = 0; $i < $num_snapshots; $i++) {
+                ?>
+                <tr class="<?php echo ($i % 2 == 1) ? 'odd_row' : ''; ?>">
+                    <td><?php echo (isset($snapshots[$i]->label) ? $this->Html->safe($snapshots[$i]->label) : null); ?></td>
+                    <td><?php echo (isset($snapshots[$i]->template_dir) ? $this->Html->safe($snapshots[$i]->template_dir) : null); ?></td>
+                    <td><?php echo (isset($snapshots[$i]->blesta_version) ? $this->Html->safe($snapshots[$i]->blesta_version) : null); ?></td>
+                    <td><?php echo (isset($snapshots[$i]->file_count) ? (int) $snapshots[$i]->file_count : 0); ?></td>
+                    <td><?php echo (isset($snapshots[$i]->date_created) ? $this->Date->cast($snapshots[$i]->date_created) : null); ?></td>
+                </tr>
+                <?php
+                }
+                ?>
+            </table>
+        <?php
+        } else {
+        ?>
+            <p><?php $this->_('AdminMain.index.no_snapshots'); ?></p>
+        <?php
+        }
+        ?>
+        </div>
+        <?php
+        $this->Widget->end();
+        ?>
