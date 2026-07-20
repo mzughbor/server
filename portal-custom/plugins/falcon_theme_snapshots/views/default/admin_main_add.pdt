@@ -1,0 +1,57 @@
+        <?php echo (isset($message) ? $message : null); ?>
+
+        <?php
+        $this->Widget->clear();
+        $this->Widget->create($this->_('AdminMain.add.boxtitle', true), ['id' => 'falcon_wp_template_add']);
+        ?>
+        <div class="inner">
+            <?php
+            $this->Form->create(null, ['class' => 'form-horizontal']);
+            ?>
+            <div class="form-group">
+                <?php $this->Form->label($this->_('AdminMain.add.field_slug', true), 'slug', ['class' => 'col-sm-3 control-label']); ?>
+                <div class="col-sm-9">
+                    <?php $this->Form->fieldText('slug', (isset($vars->slug) ? $vars->slug : null), ['id' => 'slug', 'class' => 'form-control', 'placeholder' => 'restaurant']); ?>
+                    <span class="help-block"><?php $this->_('AdminMain.add.hint_slug'); ?></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <?php $this->Form->label($this->_('AdminMain.add.field_name', true), 'name', ['class' => 'col-sm-3 control-label']); ?>
+                <div class="col-sm-9">
+                    <?php $this->Form->fieldText('name', (isset($vars->name) ? $vars->name : null), ['id' => 'name', 'class' => 'form-control']); ?>
+                </div>
+            </div>
+            <div class="form-group">
+                <?php $this->Form->label($this->_('AdminMain.add.field_staging', true), 'staging_domain', ['class' => 'col-sm-3 control-label']); ?>
+                <div class="col-sm-9">
+                    <?php $this->Form->fieldText('staging_domain', (isset($vars->staging_domain) ? $vars->staging_domain : null), ['id' => 'staging_domain', 'class' => 'form-control', 'placeholder' => 'preview-restaurant.falcon.codes']); ?>
+                    <span class="help-block"><?php $this->_('AdminMain.add.hint_staging'); ?></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <?php $this->Form->label($this->_('AdminMain.add.field_description', true), 'description', ['class' => 'col-sm-3 control-label']); ?>
+                <div class="col-sm-9">
+                    <?php $this->Form->fieldTextarea('description', (isset($vars->description) ? $vars->description : null), ['id' => 'description', 'class' => 'form-control', 'rows' => 3]); ?>
+                </div>
+            </div>
+            <div class="form-group">
+                <?php $this->Form->label($this->_('AdminMain.add.field_thumbnail', true), 'thumbnail_url', ['class' => 'col-sm-3 control-label']); ?>
+                <div class="col-sm-9">
+                    <?php $this->Form->fieldText('thumbnail_url', (isset($vars->thumbnail_url) ? $vars->thumbnail_url : null), ['id' => 'thumbnail_url', 'class' => 'form-control']); ?>
+                </div>
+            </div>
+            <div class="form-group">
+                <?php $this->Form->label($this->_('AdminMain.add.field_sort', true), 'sort_order', ['class' => 'col-sm-3 control-label']); ?>
+                <div class="col-sm-9">
+                    <?php $this->Form->fieldText('sort_order', (isset($vars->sort_order) ? $vars->sort_order : '0'), ['id' => 'sort_order', 'class' => 'form-control']); ?>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-offset-3 col-sm-9">
+                    <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/'); ?>" class="btn btn-default"><?php $this->_('AdminMain.add.cancel'); ?></a>
+                    <?php $this->Form->fieldSubmit('save', $this->_('AdminMain.add.submit', true), ['class' => 'btn btn-primary']); ?>
+                </div>
+            </div>
+            <?php $this->Form->end(); ?>
+        </div>
+        <?php $this->Widget->end(); ?>

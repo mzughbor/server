@@ -1,4 +1,4 @@
 <?php
 $lang['FalconThemeSnapshotsPlugin.name'] = 'Falcon Theme Snapshots';
-$lang['FalconThemeSnapshotsPlugin.description'] = 'Captures point-in-time snapshots of the Falcon client theme for safe upgrade and rollback.';
+$lang['FalconThemeSnapshotsPlugin.description'] = 'WordPress template snapshots for the homepage catalog, plus Blesta client theme backups.';
 $lang['FalconThemeSnapshotsPlugin.admin_main'] = 'Theme Snapshots';

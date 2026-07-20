@@ -53,6 +53,7 @@ bridge.json
 sites.json
 processed.json
 *.lock
+falcon-provisioner/templates/wp-snapshots/
 
 # ---- OS / editor junk ----
 .DS_Store

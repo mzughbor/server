@@ -1,64 +1,124 @@
-# Falcon Theme Snapshots — Phase 1
+# Falcon Theme Snapshots
 
-Blesta plugin to snapshot the custom **Falcon** client theme before upgrades.
-Branding work lives in `portal-custom/app/views/client/falcon/` (see
-`docs/blesta-theme.md`). Upgrades refresh stock `bootstrap/` but can leave
-`falcon/` stale relative to upstream markup — snapshots make diff/restore safer.
+WordPress **template snapshot** system for Falcon of Codes — the homepage theme picker
+and `provision.sh` restore path (Phase 3). Blesta client theme file backups remain a
+secondary tab in the same plugin.
 
-## Scope (Phase 1)
+## Phase 1 (done)
 
-| Delivered | Not yet |
-|-----------|---------|
-| Plugin skeleton + install/uninstall | Capture from disk |
-| DB tables + models | Diff vs live / vs bootstrap |
-| Staff Tools nav + empty list UI | Restore / rollback actions |
-| Repo mirror + sync script | Pre-upgrade cron hook |
+Blesta plugin skeleton + tables for Blesta theme file snapshots (`falcon_theme_snapshots`,
+`falcon_theme_snapshot_files`).
 
-## Data model
+## Phase 2 (done)
 
-### `falcon_theme_snapshots`
+WordPress template capture, admin UI, public catalog API.
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | int PK | |
-| company_id | int | Blesta company |
-| label | varchar(255) | e.g. "Before 5.14 upgrade" |
-| template_dir | varchar(64) | default `falcon` |
-| blesta_version | varchar(32) | nullable |
-| staff_id | int | creator |
-| notes | text | nullable |
-| file_count | int | denormalized counter |
-| total_bytes | bigint | denormalized size |
-| status | enum | `pending`, `complete`, `failed` |
-| date_created | datetime | |
-| date_updated | datetime | nullable |
+### Storage (VPS only — not in git)
 
-### `falcon_theme_snapshot_files`
+```
+/var/lib/falcon-provisioner/templates/{slug}/
+  meta.json           # catalog metadata + active flag
+  database.sql.gz     # mysqldump with {{SITE_URL}} token
+  wp-content.tar.gz   # wp-content (cache excluded)
+```
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | int PK | |
-| snapshot_id | int | FK → snapshots |
-| relative_path | varchar(512) | e.g. `css/overrides.css` |
-| content_hash | char(64) | SHA-256 |
-| content | mediumtext | file body |
-| file_size | int | bytes |
-| is_customized | tinyint | 1 = known branding file |
-| date_created | datetime | |
+Setup once on the VPS:
 
-Unique key: `(snapshot_id, relative_path)` — also serves lookups by `snapshot_id` (Blesta names indexes from the first column; do not add a separate `snapshot_id` index).
+```bash
+ssh falcons 'bash -s' < falcon-provisioner/bin/setup_template_storage.sh
+```
 
-## Install
+This creates the templates directory and sudoers so Blesta admin (`falco6812`) can run
+`/opt/falcon-provisioner/bin/snapshot_capture.sh` as root.
 
-1. Deploy: `bash falcon-provisioner/bin/sync_from_repo.sh falcons`
-2. Blesta admin → **Settings → Company → Plugins → Available**
-3. Install **Falcon Theme Snapshots**
-4. Open **Tools → Theme Snapshots** (empty list until Phase 2 capture)
+### Database
 
-Uninstall drops both tables when the last company instance is removed.
+**`falcon_wp_templates`** (plugin v2.0.0 — created on fresh install or upgrade from 1.x):
 
-## Phase 2 preview
+| Column | Notes |
+|--------|-------|
+| slug | Unique per company; matches storage dir name |
+| staging_domain | e.g. `preview-restaurant.falcon.codes` |
+| storage_dir | `/var/lib/falcon-provisioner/templates/{slug}` |
+| active | Shown in public catalog when true **and** capture exists |
+| last_captured | Updated after successful capture |
 
-- "Capture snapshot" action (reads `CUSTOMIZED_FILES` + optional full tree)
-- Diff view: snapshot vs live template vs stock `bootstrap/`
-- Restore selected files with confirmation + cache clear
+Blesta theme tables unchanged (secondary feature).
+
+### Capture script
+
+```bash
+sudo /opt/falcon-provisioner/bin/snapshot_capture.sh \
+  --domain preview-restaurant.falcon.codes \
+  --slug restaurant \
+  --name "Restaurant" \
+  --description "Demo restaurant site"
+```
+
+- Exports DB via `wp db export` (live DB untouched).
+- Replaces staging URLs in the **dump file** with `{{SITE_URL}}`.
+- **Phase 3 restore:** import dump, then  
+  `wp search-replace '{{SITE_URL}}' 'https://customer.falcon.codes' --all-tables`
+
+### Admin UI
+
+Blesta → **Tools → Theme Snapshots**
+
+1. **WordPress Templates** tab — add staging domain, **Capture**, **Activate**
+2. **Blesta Theme Files** tab — Phase 1 placeholder (capture UI later)
+
+After deploying plugin **v2.0.0**, upgrade the installed plugin:
+**Settings → Company → Plugins → Installed → Falcon Theme Snapshots → Upgrade**
+
+### Catalog API
+
+```
+GET https://falcon.codes/api/themes/catalog.php
+```
+
+Returns active templates from `meta.json` files (`active: true`). Used by homepage
+theme picker (Phase 2b: wire `falcon-codes/script.js` to this endpoint).
+
+Example response:
+
+```json
+{
+  "ok": true,
+  "count": 1,
+  "templates": [
+    {
+      "slug": "restaurant",
+      "name": "Restaurant",
+      "description": "...",
+      "thumbnail_url": "https://...",
+      "staging_domain": "preview-restaurant.falcon.codes",
+      "preview_url": "https://preview-restaurant.falcon.codes",
+      "sort_order": 0,
+      "captured_at": "2026-07-20T..."
+    }
+  ]
+}
+```
+
+## Phase 3 (not built)
+
+- `provision.sh --template restaurant` restores snapshot on customer order
+- Homepage `script.js` loads catalog API instead of hardcoded cards
+
+## Deploy
+
+```bash
+bash falcon-provisioner/bin/sync_from_repo.sh falcons
+```
+
+Plugin code updates do **not** require reinstall; bump `config.json` version and
+**Upgrade** in Blesta admin when schema changes.
+
+## Repo layout
+
+```
+portal-custom/plugins/falcon_theme_snapshots/   # Blesta plugin
+falcon-provisioner/bin/snapshot_capture.sh
+falcon-provisioner/bin/setup_template_storage.sh
+falcon-provisioner/web/api/themes/catalog.php
+```

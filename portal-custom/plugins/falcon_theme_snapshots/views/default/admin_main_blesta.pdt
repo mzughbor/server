@@ -1,0 +1,36 @@
+        <?php echo (isset($message) ? $message : null); ?>
+
+        <ul class="nav nav-tabs">
+            <li><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/'); ?>"><?php $this->_('AdminMain.index.tab_wp'); ?></a></li>
+            <li class="active"><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/blesta/'); ?>"><?php $this->_('AdminMain.index.tab_blesta'); ?></a></li>
+        </ul>
+
+        <div class="alert alert-info"><?php $this->_('AdminMain.blesta.phase_notice'); ?></div>
+
+        <?php
+        $this->Widget->clear();
+        $this->Widget->create($this->_('AdminMain.blesta.boxtitle', true), ['id' => 'falcon_theme_snapshots']);
+        ?>
+        <div class="inner">
+        <?php if (!empty($snapshots)) { ?>
+            <table class="table">
+                <tr class="heading_row">
+                    <td><span><?php $this->_('AdminMain.blesta.heading_label'); ?></span></td>
+                    <td><span><?php $this->_('AdminMain.blesta.heading_template'); ?></span></td>
+                    <td><span><?php $this->_('AdminMain.blesta.heading_files'); ?></span></td>
+                    <td><span><?php $this->_('AdminMain.blesta.heading_date'); ?></span></td>
+                </tr>
+                <?php foreach ($snapshots as $i => $snapshot) { ?>
+                <tr class="<?php echo ($i % 2 == 1) ? 'odd_row' : ''; ?>">
+                    <td><?php echo $this->Html->safe($snapshot->label ?? ''); ?></td>
+                    <td><?php echo $this->Html->safe($snapshot->template_dir ?? ''); ?></td>
+                    <td><?php echo (int) ($snapshot->file_count ?? 0); ?></td>
+                    <td><?php echo !empty($snapshot->date_created) ? $this->Date->cast($snapshot->date_created) : ''; ?></td>
+                </tr>
+                <?php } ?>
+            </table>
+        <?php } else { ?>
+            <p><?php $this->_('AdminMain.blesta.no_snapshots'); ?></p>
+        <?php } ?>
+        </div>
+        <?php $this->Widget->end(); ?>
