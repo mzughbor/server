@@ -1,0 +1,24 @@
+        <?php
+        $active_tab = $active_tab ?? 'wp';
+        $tabs = [
+            'wp' => [
+                'href' => $this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/',
+                'label' => 'AdminMain.index.tab_wp',
+            ],
+            'blesta' => [
+                'href' => $this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/blesta/',
+                'label' => 'AdminMain.index.tab_blesta',
+            ],
+            'guide' => [
+                'href' => $this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/guide/',
+                'label' => 'AdminMain.index.tab_guide',
+            ],
+        ];
+        ?>
+        <ul class="nav nav-tabs">
+            <?php foreach ($tabs as $key => $tab) { ?>
+            <li<?php echo ($active_tab === $key) ? ' class="active"' : ''; ?>>
+                <a href="<?php echo $this->Html->safe($tab['href']); ?>"><?php $this->_($tab['label']); ?></a>
+            </li>
+            <?php } ?>
+        </ul>

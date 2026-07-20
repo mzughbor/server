@@ -175,6 +175,66 @@ class AdminMain extends FalconThemeSnapshotsController
     }
 
     /**
+     * Staff guide: workflow, field reference, and admin test provision.
+     */
+    public function guide()
+    {
+        $prefill_theme = '';
+        if (isset($this->get['theme'])) {
+            $prefill_theme = strtolower(trim((string) $this->get['theme']));
+        } elseif (isset($this->get[0]) && $this->get[0] !== '') {
+            $prefill_theme = strtolower(trim((string) $this->get[0]));
+        }
+
+        $this->set('templates', $this->FalconWpTemplates->getAllForSelect($this->company_id));
+        $this->set('prefill_theme', $prefill_theme);
+        $this->set('catalog_url', 'https://falcon.codes/api/themes/catalog.php');
+    }
+
+    /**
+     * Admin-only AJAX: provision a test trial site for a theme slug.
+     */
+    public function test_provision()
+    {
+        $this->requireAjax();
+
+        $subdomain = isset($this->post['subdomain'])
+            ? strtolower(trim((string) $this->post['subdomain']))
+            : '';
+        $theme_slug = isset($this->post['theme_slug'])
+            ? strtolower(trim((string) $this->post['theme_slug']))
+            : '';
+
+        $result = $this->FalconWpTemplates->adminTestProvision(
+            $this->company_id,
+            $subdomain,
+            $theme_slug
+        );
+
+        if ($result === false) {
+            $errors = $this->FalconWpTemplates->errors();
+            $message = $errors['test']['failed']
+                ?? $errors['test']['invalid']
+                ?? Language::_('AdminMain.!error.test.failed', true);
+            $this->outputAsJson([
+                'success' => false,
+                'message' => $message,
+            ]);
+            return false;
+        }
+
+        $result['blesta_client_url'] = $this->base_uri
+            . ltrim($result['blesta_service_url'] ?? '', '/');
+
+        $this->outputAsJson([
+            'success' => true,
+            'message' => Language::_('AdminMain.!success.test', true),
+            'result' => $result,
+        ]);
+        return false;
+    }
+
+    /**
      * Blesta client theme snapshots (secondary, Phase 1).
      */
     public function blesta()

@@ -1,0 +1,182 @@
+        <?php echo (isset($message) ? $message : null); ?>
+
+        <?php $active_tab = 'guide'; include dirname(__FILE__) . DIRECTORY_SEPARATOR . '_admin_tabs.pdt'; ?>
+
+        <?php
+        $this->Widget->clear();
+        $this->Widget->create($this->_('AdminMain.guide.boxtitle', true), ['id' => 'falcon_guide_workflow']);
+        ?>
+        <div class="inner">
+            <p><?php $this->_('AdminMain.guide.intro'); ?></p>
+
+            <ol class="list-unstyled" style="margin: 20px 0;">
+                <?php for ($step = 1; $step <= 5; $step++) { ?>
+                <li style="margin-bottom: 18px; padding-left: 36px; position: relative;">
+                    <span class="badge" style="position: absolute; left: 0; top: 2px; font-size: 14px; padding: 6px 10px; background: #337ab7;"><?php echo (int) $step; ?></span>
+                    <strong><?php $this->_('AdminMain.guide.step' . $step . '_title'); ?></strong>
+                    <p class="text-muted" style="margin: 6px 0 0;"><?php $this->_('AdminMain.guide.step' . $step . '_body'); ?></p>
+                </li>
+                <?php } ?>
+            </ol>
+        </div>
+        <?php $this->Widget->end(); ?>
+
+        <?php
+        $this->Widget->clear();
+        $this->Widget->create($this->_('AdminMain.guide.fields_boxtitle', true), ['id' => 'falcon_guide_fields']);
+        ?>
+        <div class="inner">
+            <table class="table">
+                <tr class="heading_row">
+                    <td><span><?php $this->_('AdminMain.guide.field_name'); ?></span></td>
+                    <td><span><?php $this->_('AdminMain.guide.field_meaning'); ?></span></td>
+                </tr>
+                <tr>
+                    <td><code>slug</code></td>
+                    <td><?php $this->_('AdminMain.guide.field_slug'); ?></td>
+                </tr>
+                <tr class="odd_row">
+                    <td><code>staging_domain</code></td>
+                    <td><?php $this->_('AdminMain.guide.field_staging'); ?></td>
+                </tr>
+                <tr>
+                    <td><code>thumbnail_url</code></td>
+                    <td><?php $this->_('AdminMain.guide.field_thumbnail'); ?></td>
+                </tr>
+                <tr class="odd_row">
+                    <td><?php $this->_('AdminMain.guide.action_capture'); ?></td>
+                    <td><?php $this->_('AdminMain.guide.field_capture'); ?></td>
+                </tr>
+                <tr>
+                    <td><?php $this->_('AdminMain.guide.action_activate'); ?></td>
+                    <td><?php $this->_('AdminMain.guide.field_activate'); ?></td>
+                </tr>
+            </table>
+        </div>
+        <?php $this->Widget->end(); ?>
+
+        <?php
+        $this->Widget->clear();
+        $this->Widget->create($this->_('AdminMain.guide.creds_boxtitle', true), ['id' => 'falcon_guide_creds']);
+        ?>
+        <div class="inner">
+            <p><?php $this->_('AdminMain.guide.creds_body'); ?></p>
+        </div>
+        <?php $this->Widget->end(); ?>
+
+        <?php
+        $this->Widget->clear();
+        $this->Widget->create($this->_('AdminMain.guide.customer_boxtitle', true), ['id' => 'falcon_guide_customer']);
+        ?>
+        <div class="inner">
+            <p><?php $this->_('AdminMain.guide.customer_body'); ?></p>
+        </div>
+        <?php $this->Widget->end(); ?>
+
+        <?php
+        $this->Widget->clear();
+        $this->Widget->create($this->_('AdminMain.guide.safety_boxtitle', true), ['id' => 'falcon_guide_safety']);
+        ?>
+        <div class="inner">
+            <ul>
+                <li><?php $this->_('AdminMain.guide.safety_delete_template'); ?></li>
+                <li><?php $this->_('AdminMain.guide.safety_delete_wp'); ?></li>
+                <li><?php $this->_('AdminMain.guide.safety_slug'); ?></li>
+                <li><?php $this->_('AdminMain.guide.safety_staging'); ?></li>
+            </ul>
+        </div>
+        <?php $this->Widget->end(); ?>
+
+        <?php
+        $prefill_theme = $prefill_theme ?? '';
+        $this->Widget->clear();
+        $this->Widget->create($this->_('AdminMain.guide.test_boxtitle', true), ['id' => 'falcon_guide_test']);
+        ?>
+        <div class="inner">
+            <p class="text-muted"><?php $this->_('AdminMain.guide.test_intro'); ?></p>
+            <?php $this->Form->create(null, ['class' => 'form-horizontal', 'id' => 'admin-test-form']); ?>
+            <div class="form-group">
+                <?php $this->Form->label($this->_('AdminMain.guide.test_subdomain', true), 'subdomain', ['class' => 'col-sm-3 control-label']); ?>
+                <div class="col-sm-9">
+                    <div class="input-group">
+                        <?php $this->Form->fieldText('subdomain', null, ['id' => 'test_subdomain', 'class' => 'form-control', 'placeholder' => 'test-restaurant']); ?>
+                        <span class="input-group-addon">.falcon.codes</span>
+                    </div>
+                    <span class="help-block"><?php $this->_('AdminMain.guide.test_subdomain_hint'); ?></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <?php $this->Form->label($this->_('AdminMain.guide.test_theme', true), 'theme_slug', ['class' => 'col-sm-3 control-label']); ?>
+                <div class="col-sm-9">
+                    <select name="theme_slug" id="test_theme_slug" class="form-control">
+                        <option value=""><?php $this->_('AdminMain.guide.test_theme_select'); ?></option>
+                        <?php foreach (($templates ?? []) as $template) { ?>
+                        <option value="<?php echo $this->Html->safe($template->slug ?? ''); ?>"<?php echo (($prefill_theme !== '' && $prefill_theme === ($template->slug ?? '')) ? ' selected' : ''); ?>>
+                            <?php echo $this->Html->safe(($template->name ?? '') . ' (' . ($template->slug ?? '') . ')'); ?>
+                        </option>
+                        <?php } ?>
+                    </select>
+                    <span class="help-block"><?php $this->_('AdminMain.guide.test_theme_hint'); ?></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-offset-3 col-sm-9">
+                    <button type="submit" class="btn btn-primary" id="test-provision-btn">
+                        <i class="fas fa-bolt"></i> <?php $this->_('AdminMain.guide.test_submit'); ?>
+                    </button>
+                </div>
+            </div>
+            <?php $this->Form->end(); ?>
+
+            <div id="test-provision-result" style="display: none; margin-top: 16px;">
+                <div class="alert alert-success" id="test-provision-success" style="display: none;"></div>
+                <div class="alert alert-danger" id="test-provision-error" style="display: none;"></div>
+            </div>
+        </div>
+        <?php $this->Widget->end(); ?>
+
+        <script type="text/javascript">
+        $(document).ready(function() {
+            $('#admin-test-form').on('submit', function(e) {
+                e.preventDefault();
+                var $btn = $('#test-provision-btn');
+                var originalHtml = $btn.html();
+                $btn.prop('disabled', true).html('<?php echo $this->_('AdminMain.guide.test_running', true); ?>');
+                $('#test-provision-result').hide();
+                $('#test-provision-success, #test-provision-error').hide();
+
+                $(this).blestaRequest(
+                    'POST',
+                    '<?php echo $this->Html->safe($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/test_provision/'); ?>',
+                    {
+                        subdomain: $('#test_subdomain').val(),
+                        theme_slug: $('#test_theme_slug').val()
+                    },
+                    function(data) {
+                        if (data.success) {
+                            var r = data.result || {};
+                            var html = '<strong><?php echo $this->_('AdminMain.guide.test_success', true); ?></strong><ul style="margin: 10px 0 0;">'
+                                + '<li>Service ID: ' + (r.service_id || '—') + '</li>'
+                                + '<li>Status: ' + (r.status || '—') + '</li>'
+                                + '<li>Site: <a href="' + (r.site_url || '#') + '" target="_blank" rel="noopener">' + (r.site_url || '—') + '</a></li>'
+                                + '<li>WP Admin: <a href="' + (r.wp_admin_url || '#') + '" target="_blank" rel="noopener">' + (r.wp_admin_url || '—') + '</a>'
+                                + (r.wp_user ? ' (' + r.wp_user + ')' : '') + '</li>'
+                                + (r.blesta_client_url ? '<li><a href="' + r.blesta_client_url + '"><?php echo $this->_('AdminMain.guide.test_blesta_link', true); ?></a> — <?php echo $this->_('AdminMain.guide.test_creds_hint', true); ?></li>' : '')
+                                + '</ul>';
+                            $('#test-provision-success').html(html).show();
+                        } else {
+                            $('#test-provision-error').text(data.message || '<?php echo $this->_('AdminMain.!error.test.failed', true); ?>').show();
+                        }
+                        $('#test-provision-result').show();
+                    },
+                    function() {
+                        $('#test-provision-error').text('<?php echo $this->_('AdminMain.!error.test.failed', true); ?>').show();
+                        $('#test-provision-result').show();
+                    },
+                    { dataType: 'json', timeout: 600000 }
+                ).always(function() {
+                    $btn.prop('disabled', false).html(originalHtml);
+                });
+            });
+        });
+        </script>

@@ -1,9 +1,6 @@
         <?php echo (isset($message) ? $message : null); ?>
 
-        <ul class="nav nav-tabs">
-            <li class="active"><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/'); ?>"><?php $this->_('AdminMain.index.tab_wp'); ?></a></li>
-            <li><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/blesta/'); ?>"><?php $this->_('AdminMain.index.tab_blesta'); ?></a></li>
-        </ul>
+        <?php $active_tab = 'wp'; include dirname(__FILE__) . DIRECTORY_SEPARATOR . '_admin_tabs.pdt'; ?>
 
         <div class="pad">
             <p class="text-muted">
@@ -65,7 +62,8 @@
                         <?php } else { ?>
                         <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/activate/' . (int) $template->id . '/1/'); ?>"><?php $this->_('AdminMain.index.action_activate'); ?></a>,
                         <?php } ?>
-                        <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/delete/' . (int) $template->id . '/'); ?>" class="delete-template" data-name="<?php echo $this->Html->safe($template->name ?? $template->slug ?? ''); ?>"><?php $this->_('AdminMain.index.action_delete'); ?></a>
+                        <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/delete/' . (int) $template->id . '/'); ?>" class="delete-template" data-name="<?php echo $this->Html->safe($template->name ?? $template->slug ?? ''); ?>"><?php $this->_('AdminMain.index.action_delete'); ?></a>,
+                        <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/guide/?theme=' . urlencode($template->slug ?? '')); ?>"><?php $this->_('AdminMain.index.action_test'); ?></a>
                     </td>
                 </tr>
                 <?php } ?>

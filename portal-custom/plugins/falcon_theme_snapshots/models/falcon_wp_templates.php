@@ -13,6 +13,8 @@ class FalconWpTemplates extends FalconThemeSnapshotsModel
     public const STORAGE_ROOT = '/var/lib/falcon-provisioner/templates';
     public const CAPTURE_BIN = '/opt/falcon-provisioner/bin/snapshot_capture.sh';
     public const CAPTURE_LOG = '/var/log/falcon-provisioner-capture.log';
+    public const ADMIN_TEST_BIN = '/opt/falcon-provisioner/bin/admin_test_provision.sh';
+    public const PROVISION_LOG = '/var/log/falcon-provisioner.log';
 
     public function __construct()
     {
@@ -118,6 +120,112 @@ class FalconWpTemplates extends FalconThemeSnapshotsModel
     }
 
     /**
+     * All templates for admin dropdowns (no pagination).
+     *
+     * @param int $company_id
+     * @return array
+     */
+    public function getAllForSelect($company_id)
+    {
+        return $this->Record->select()->from('falcon_wp_templates')->
+            where('company_id', '=', $company_id)->
+            order(['name' => 'asc'])->
+            fetchAll();
+    }
+
+    /**
+     * Admin test: create Blesta trial service and run provisioner poller.
+     *
+     * @param int $company_id
+     * @param string $subdomain
+     * @param string $theme_slug
+     * @return array|false
+     */
+    public function adminTestProvision($company_id, $subdomain, $theme_slug)
+    {
+        if (!preg_match('/^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$/', $subdomain)) {
+            $this->Input->setErrors([
+                'test' => ['invalid' => Language::_('FalconWpTemplates.!error.test.subdomain', true)]
+            ]);
+            return false;
+        }
+
+        if ($theme_slug === '' || !($template = $this->getBySlug($company_id, $theme_slug))) {
+            $this->Input->setErrors([
+                'test' => ['invalid' => Language::_('FalconWpTemplates.!error.test.theme', true)]
+            ]);
+            return false;
+        }
+
+        if (empty($template->last_captured)) {
+            $this->Input->setErrors([
+                'test' => ['invalid' => Language::_('FalconWpTemplates.!error.test.not_captured', true)]
+            ]);
+            return false;
+        }
+
+        $cmd = sprintf(
+            'sudo %s %s %s 2>&1',
+            escapeshellarg(self::ADMIN_TEST_BIN),
+            escapeshellarg($subdomain),
+            escapeshellarg($theme_slug)
+        );
+
+        $started = gmdate('Y-m-d H:i:s');
+        $this->logProvision(sprintf(
+            '[admin_test_start] sub=%s theme=%s template_id=%d cmd=%s',
+            $subdomain,
+            $theme_slug,
+            (int) $template->id,
+            $cmd
+        ));
+
+        $output = [];
+        $code = 0;
+        exec($cmd, $output, $code);
+        $outputText = implode("\n", $output);
+
+        $this->logProvision(sprintf(
+            '[admin_test_finish] sub=%s theme=%s exit=%d started=%s output=%s',
+            $subdomain,
+            $theme_slug,
+            $code,
+            $started,
+            $outputText !== '' ? $outputText : '(empty)'
+        ));
+
+        foreach ($output as $line) {
+            if (strpos($line, 'TEST_OK ') === 0) {
+                $json = trim(substr($line, strlen('TEST_OK ')));
+                $result = json_decode($json, true);
+                if (is_array($result)) {
+                    return $result;
+                }
+            }
+            if (strpos($line, 'TEST_FAIL ') === 0) {
+                $json = trim(substr($line, strlen('TEST_FAIL ')));
+                $fail = json_decode($json, true);
+                $message = is_array($fail) ? ($fail['message'] ?? '') : '';
+                $this->Input->setErrors([
+                    'test' => [
+                        'failed' => $message !== ''
+                            ? $message
+                            : Language::_('FalconWpTemplates.!error.test.failed', true)
+                    ]
+                ]);
+                return false;
+            }
+        }
+
+        $this->Input->setErrors([
+            'test' => [
+                'failed' => Language::_('FalconWpTemplates.!error.test.failed', true, $outputText)
+            ]
+        ]);
+        return false;
+    }
+
+    /**
      * @param int $company_id
      * @param int $page
      * @param array $order_by
@@ -208,6 +316,17 @@ class FalconWpTemplates extends FalconThemeSnapshotsModel
         $this->syncMetaActive($template->slug, (bool) $template->active, $template);
 
         return $output;
+    }
+
+    /**
+     * Append a line to the falcon-provisioner log (best-effort).
+     *
+     * @param string $line
+     */
+    private function logProvision($line)
+    {
+        $entry = sprintf("[%s] [blesta_admin_test] %s\n", gmdate('Y-m-d H:i:s'), $line);
+        @file_put_contents(self::PROVISION_LOG, $entry, FILE_APPEND | LOCK_EX);
     }
 
     /**

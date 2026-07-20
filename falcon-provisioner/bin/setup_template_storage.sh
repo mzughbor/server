@@ -6,6 +6,7 @@ set -euo pipefail
 TEMPLATES_DIR="/var/lib/falcon-provisioner/templates"
 SITE_USER="falco6812"
 CAPTURE="/opt/falcon-provisioner/bin/snapshot_capture.sh"
+ADMIN_TEST="/opt/falcon-provisioner/bin/admin_test_provision.sh"
 CAPTURE_LOG="/var/log/falcon-provisioner-capture.log"
 SUDOERS="/etc/sudoers.d/falcon-template-capture"
 
@@ -19,10 +20,10 @@ touch "$CAPTURE_LOG"
 chown root:"$SITE_USER" "$CAPTURE_LOG"
 chmod 664 "$CAPTURE_LOG"
 
-echo ">> Sudoers: ${SITE_USER} may run snapshot_capture.sh as root"
+echo ">> Sudoers: ${SITE_USER} may run snapshot_capture.sh and admin_test_provision.sh as root"
 install -m 440 /dev/stdin "$SUDOERS" <<EOF
-# Falcon Theme Snapshots — Blesta admin capture (Phase 2)
-${SITE_USER} ALL=(root) NOPASSWD: ${CAPTURE}
+# Falcon Theme Snapshots — Blesta admin capture + test provision (Phase 2)
+${SITE_USER} ALL=(root) NOPASSWD: ${CAPTURE}, ${ADMIN_TEST}
 EOF
 visudo -cf "$SUDOERS"
 

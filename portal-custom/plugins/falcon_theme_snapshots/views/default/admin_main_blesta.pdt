@@ -1,9 +1,6 @@
         <?php echo (isset($message) ? $message : null); ?>
 
-        <ul class="nav nav-tabs">
-            <li><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/'); ?>"><?php $this->_('AdminMain.index.tab_wp'); ?></a></li>
-            <li class="active"><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/blesta/'); ?>"><?php $this->_('AdminMain.index.tab_blesta'); ?></a></li>
-        </ul>
+        <?php $active_tab = 'blesta'; include dirname(__FILE__) . DIRECTORY_SEPARATOR . '_admin_tabs.pdt'; ?>
 
         <?php
         $this->Widget->clear();
