@@ -55,23 +55,31 @@ echo "required_contact_fields=$(echo WyJlbWFpbCIsImZpc3RfbmFtZSIsImxhc3RfbmFtZSJ
 
 echo "=== Section B: ensure Blesta system cron runs (activates paid-pending services) ==="
 BLESTA_ROOT="${BLESTA_ROOT:-/home/falcon.codes/public_html/portal}"
+BLESTA_USER="${BLESTA_USER:-falco6812}"
 CRON_D=/etc/cron.d/falcon-provisioner
 if [ -f /opt/falcon-provisioner/falcon-provisioner.cron ]; then
   cp /opt/falcon-provisioner/falcon-provisioner.cron "$CRON_D"
   chmod 644 "$CRON_D"
-  echo "installed $CRON_D (Blesta cron */5 + poller */1)"
+  echo "installed $CRON_D (Blesta cron as $BLESTA_USER + poller as root)"
 elif [ -d "$BLESTA_ROOT" ]; then
   cat > "$CRON_D" <<CRON
 # Falcon of Codes - Blesta system cron + provisioner poller
 SHELL=/bin/bash
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-*/5 * * * * root cd $BLESTA_ROOT && /usr/bin/php index.php cron >/dev/null 2>&1
+* * * * * $BLESTA_USER cd $BLESTA_ROOT && /usr/bin/php index.php cron >/dev/null 2>&1
 * * * * * root /usr/bin/php /opt/falcon-provisioner/bin/blesta_poll.php >/dev/null 2>&1
 CRON
   chmod 644 "$CRON_D"
   echo "installed $CRON_D (inline fallback)"
 else
   echo "WARN: Blesta root not found; cron not installed"
+fi
+# Remove duplicate Blesta cron from the web user's personal crontab (if present).
+if crontab -u "$BLESTA_USER" -l 2>/dev/null | grep -qE 'portal/(cron\.php|index\.php cron)'; then
+  crontab -u "$BLESTA_USER" -l 2>/dev/null \
+    | grep -vE 'portal/(cron\.php|index\.php cron)' \
+    | crontab -u "$BLESTA_USER" - 2>/dev/null || true
+  echo "removed duplicate Blesta cron from $BLESTA_USER user crontab"
 fi
 
 echo "=== Purge any prior Falcon option group/options (idempotent re-run) ==="

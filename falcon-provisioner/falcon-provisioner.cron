@@ -1,8 +1,8 @@
 # Falcon of Codes - Blesta system cron + Phase 4 provisioner poller.
-# Blesta cron activates paid-pending services (None module / $0 trial).
-# Poller provisions active package-4 services every minute.
+# Blesta cron MUST run as the web server user (falco6812), not root.
+# Poller runs as root (needs sudo for provisioning).
 SHELL=/bin/bash
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 BLESTA=/home/falcon.codes/public_html/portal
-*/5 * * * * root cd $BLESTA && /usr/bin/php index.php cron >/dev/null 2>&1
+* * * * * falco6812 cd $BLESTA && /usr/bin/php index.php cron >/dev/null 2>&1
 * * * * * root /usr/bin/php /opt/falcon-provisioner/bin/blesta_poll.php >/dev/null 2>&1
