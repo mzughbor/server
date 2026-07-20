@@ -12,6 +12,7 @@
 
   // ---- Phase 4: subdomain reservation + order contract -------------------
   const API_BASE = "/api/subdomain";
+  const CATALOG_API = "/api/themes/catalog.php";
   const ORDER_URL = "https://falcon.codes/portal/order/";
   const SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{1,30}[a-z0-9])$/;
   const SS = { sub: "falcon_subdomain", theme: "falcon_theme", token: "falcon_token" };
@@ -293,8 +294,11 @@
     });
   });
 
-  // Theme demos
-  const themeCards = document.querySelectorAll(".theme-card");
+  // Theme demos (catalog-driven)
+  const themeGrid = document.getElementById("themeGrid");
+  const themeCatalogLoading = document.getElementById("themeCatalogLoading");
+  const themeCatalogEmpty = document.getElementById("themeCatalogEmpty");
+  const themeScrollHint = document.getElementById("themeScrollHint");
   const previewPanel = document.getElementById("themePreviewPanel");
   const previewFrame = document.getElementById("themePreviewFrame");
   const previewUrl = document.getElementById("themePreviewUrl");
@@ -302,17 +306,115 @@
   const selectedNote = document.getElementById("themeSelectedNote");
   const selectedName = document.getElementById("themeSelectedName");
   const launchLink = document.getElementById("launchLink");
+  let themeCards = [];
+
+  function escapeHtml(s) {
+    return String(s || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function catalogTag(name) {
+    const n = (name || "").toUpperCase();
+    if (n.includes("REST")) return "RESTAURANT";
+    if (n.includes("CAFE")) return "RESTAURANT";
+    return "TEMPLATE";
+  }
+
+  function renderThemeCard(t) {
+    const slug = t.slug || "";
+    const name = t.name || slug;
+    const desc = t.description || "Professional website template ready to launch on your subdomain.";
+    const preview = t.preview_url || (t.staging_domain ? `https://${t.staging_domain}` : "");
+    const thumb = t.thumbnail_url || "";
+    const host = preview ? preview.replace(/^https?:\/\//, "") : `${slug}-demo.falcon.codes`;
+    const thumbHtml = thumb
+      ? `<img class="theme-thumb-img" src="${escapeHtml(thumb)}" alt="" loading="lazy" />`
+      : `<div class="theme-thumb theme-thumb-studio" aria-hidden="true">
+           <span class="theme-thumb-nav"></span>
+           <span class="theme-thumb-hero"></span>
+           <span class="theme-thumb-line"></span>
+           <span class="theme-thumb-line short"></span>
+         </div>`;
+
+    return `
+      <article class="theme-card" data-theme="${escapeHtml(slug)}" data-label="${escapeHtml(name)}"
+               data-url="${escapeHtml(host)}" data-preview="${escapeHtml(preview)}">
+        ${thumbHtml}
+        <div class="theme-body">
+          <span class="theme-tag">${escapeHtml(catalogTag(name))}</span>
+          <h3>${escapeHtml(name)}</h3>
+          <p>${escapeHtml(desc)}</p>
+          <div class="theme-actions">
+            ${preview ? `<a class="btn btn-outline btn-sm theme-preview-link" href="${escapeHtml(preview)}" target="_blank" rel="noopener">Preview Demo</a>` : ""}
+            <button type="button" class="btn btn-outline btn-sm theme-preview-btn">Quick Preview</button>
+            <button type="button" class="btn btn-primary btn-sm theme-choose-btn">Choose This</button>
+          </div>
+        </div>
+      </article>`;
+  }
+
+  function bindThemeCards() {
+    themeCards = document.querySelectorAll(".theme-card");
+    themeCards.forEach((card) => {
+      card.querySelector(".theme-preview-btn")?.addEventListener("click", () => setThemePreview(card));
+      card.querySelector(".theme-choose-btn")?.addEventListener("click", () => chooseTheme(card));
+    });
+    updateThemeScrollButtons();
+  }
+
+  function showCatalogEmpty() {
+    themeCatalogLoading?.setAttribute("hidden", "");
+    themeCatalogEmpty?.removeAttribute("hidden");
+    themeScrollHint?.setAttribute("hidden", "");
+    document.querySelector(".theme-carousel")?.setAttribute("hidden", "");
+  }
+
+  function showCatalogLoaded(count) {
+    themeCatalogLoading?.setAttribute("hidden", "");
+    themeCatalogEmpty?.setAttribute("hidden", "");
+    if (count > 0) {
+      themeScrollHint?.removeAttribute("hidden");
+      document.querySelector(".theme-carousel")?.removeAttribute("hidden");
+    } else {
+      showCatalogEmpty();
+    }
+  }
+
+  async function loadThemeCatalog() {
+    try {
+      const r = await fetch(CATALOG_API, { headers: { Accept: "application/json" } });
+      const data = await r.json();
+      const templates = (data && data.ok && Array.isArray(data.templates)) ? data.templates : [];
+      if (!themeGrid) return;
+      if (templates.length === 0) {
+        showCatalogEmpty();
+        return;
+      }
+      themeGrid.innerHTML = templates.map(renderThemeCard).join("");
+      bindThemeCards();
+      showCatalogLoaded(templates.length);
+    } catch (e) {
+      showCatalogEmpty();
+    }
+  }
 
   function setThemePreview(card) {
     const theme = card.dataset.theme;
     const label = card.dataset.label;
     const url = card.dataset.url;
+    const livePreview = card.dataset.preview;
 
     themeCards.forEach((c) => c.classList.remove("is-previewing"));
     card.classList.add("is-previewing");
 
     previewPanel.hidden = false;
     previewFrame.className = `theme-preview-frame theme-frame-${theme}`;
+    if (livePreview && previewFrame) {
+      previewFrame.innerHTML = `<iframe src="${escapeHtml(livePreview)}" title="${escapeHtml(label)} preview" loading="lazy"></iframe>`;
+    }
     previewUrl.textContent = url;
     previewName.textContent = label;
 
@@ -327,7 +429,6 @@
     card.classList.add("is-selected");
     setThemePreview(card);
 
-    // Persist the theme_id (card slug) per the URL/token contract.
     store.set(SS.theme, theme);
 
     selectedName.textContent = label;
@@ -335,14 +436,7 @@
     if (launchLink) launchLink.href = buildOrderUrl();
   }
 
-  themeCards.forEach((card) => {
-    card.querySelector(".theme-preview-btn")?.addEventListener("click", () => {
-      setThemePreview(card);
-    });
-    card.querySelector(".theme-choose-btn")?.addEventListener("click", () => {
-      chooseTheme(card);
-    });
-  });
+  loadThemeCatalog();
 
   // "Continue to launch →" — carry subdomain+theme+token to the order form.
   launchLink?.addEventListener("click", (e) => {
@@ -374,7 +468,7 @@
     if (!themeScroll || !scrollPrev || !scrollNext) return;
     const maxScroll = themeScroll.scrollWidth - themeScroll.clientWidth;
     scrollPrev.disabled = themeScroll.scrollLeft <= 4;
-    scrollNext.disabled = themeScroll.scrollLeft >= maxScroll - 4;
+    scrollNext.disabled = maxScroll <= 4 || themeScroll.scrollLeft >= maxScroll - 4;
   }
 
   scrollPrev?.addEventListener("click", () => {

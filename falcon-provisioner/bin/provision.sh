@@ -6,7 +6,7 @@
 #
 # Usage:
 #   provision.sh --subdomain SUB --theme THEME_ID --email EMAIL --client_id ID \
-#                [--token RESERVATION_TOKEN] [--force]
+#                [--token RESERVATION_TOKEN] [--template TEMPLATE_SLUG] [--force]
 #
 set -uo pipefail
 
@@ -20,9 +20,11 @@ SECRETS_DIR="${STATE_DIR}/secrets"
 RESERVATIONS="${STATE_DIR}/reservations.json"
 SITES="${STATE_DIR}/sites.json"
 BRIDGE="${STATE_DIR}/bridge.json"
+TEMPLATES_DIR="${STATE_DIR}/templates"
 META="/opt/falcon-provisioner/templates/meta.json"
 LOG="/var/log/falcon-provisioner.log"
 DEFAULT_THEME="twentytwentyfour"
+URL_TOKEN="{{SITE_URL}}"
 ADMIN_EMAIL_FALLBACK="mzughbo@gmail.com"
 
 RESERVED_WORDS="www portal mail api admin demo-test ns1 ns2 ftp cpanel webmail mx smtp imap pop root blesta falcon static cdn assets"
@@ -34,13 +36,13 @@ die() { log "ERROR: $*"; echo "PROVISION_FAILED: $*"; exit 1; }
 
 usage() {
   cat >&2 <<EOF
-Usage: $0 --subdomain SUB --theme THEME_ID --email EMAIL --client_id ID [--token TOK] [--force]
+Usage: $0 --subdomain SUB --theme THEME_ID --email EMAIL --client_id ID [--token TOK] [--template SLUG] [--force]
 EOF
   exit 2
 }
 
 # ---------------------------------------------------------------- args
-SUB=""; THEME_ID=""; EMAIL=""; CLIENT_ID=""; TOKEN=""; FORCE=0
+SUB=""; THEME_ID=""; EMAIL=""; CLIENT_ID=""; TOKEN=""; TEMPLATE_SLUG=""; TEMPLATE_EXPLICIT=0; FORCE=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --subdomain) SUB="${2:-}"; shift 2;;
@@ -48,6 +50,7 @@ while [ $# -gt 0 ]; do
     --email)     EMAIL="${2:-}"; shift 2;;
     --client_id) CLIENT_ID="${2:-}"; shift 2;;
     --token)     TOKEN="${2:-}"; shift 2;;
+    --template)  TEMPLATE_SLUG="${2:-}"; TEMPLATE_EXPLICIT=1; shift 2;;
     --force)     FORCE=1; shift;;
     -h|--help)   usage;;
     *) die "unknown argument: $1";;
@@ -59,12 +62,22 @@ done
 [ -n "$CLIENT_ID" ] || CLIENT_ID="manual"
 [ -n "$EMAIL" ] || EMAIL="$ADMIN_EMAIL_FALLBACK"
 [ -n "$THEME_ID" ] || THEME_ID="default"
+[ -n "$TEMPLATE_SLUG" ] || TEMPLATE_SLUG="$THEME_ID"
+TEMPLATE_SLUG="$(echo "$TEMPLATE_SLUG" | tr '[:upper:]' '[:lower:]')"
+TEMPLATE_DIR="${TEMPLATES_DIR}/${TEMPLATE_SLUG}"
+RESTORE_TEMPLATE=0
+if [ -f "${TEMPLATE_DIR}/database.sql.gz" ] && [ -f "${TEMPLATE_DIR}/wp-content.tar.gz" ]; then
+  RESTORE_TEMPLATE=1
+fi
+if [ "$TEMPLATE_EXPLICIT" -eq 1 ] && [ "$RESTORE_TEMPLATE" -ne 1 ]; then
+  die "template ${TEMPLATE_SLUG} not found or incomplete at ${TEMPLATE_DIR}"
+fi
 
 SUB="$(echo "$SUB" | tr '[:upper:]' '[:lower:]')"
 FQDN="${SUB}.${MASTER}"
 DOCROOT="${HOME_BASE}/${FQDN}"
 
-log "=== provision start: sub=${SUB} theme=${THEME_ID} client=${CLIENT_ID} email=${EMAIL} force=${FORCE} ==="
+log "=== provision start: sub=${SUB} theme=${THEME_ID} template=${TEMPLATE_SLUG} restore=${RESTORE_TEMPLATE} client=${CLIENT_ID} email=${EMAIL} force=${FORCE} ==="
 
 # ---------------------------------------------------------------- 1. validate
 # POSIX-safe slug validation (3-32 chars, alnum ends, alnum/hyphen middle)
@@ -152,53 +165,125 @@ mysql -e "ALTER USER '${DBUSER}'@'localhost' IDENTIFIED BY '${DBPASS}';" 2>/dev/
 mysql -e "GRANT ALL PRIVILEGES ON \`${DBNAME}\`.* TO '${DBUSER}'@'localhost'; FLUSH PRIVILEGES;" \
   || die "failed to grant privileges on ${DBNAME}"
 
-# ---------------------------------------------------------------- 4. WordPress
-# Resolve theme_id -> wp slug via meta.json (php parse).
-THEME_SLUG=$(php -r '
-  $f=$argv[1]; $id=$argv[2];
-  $m=json_decode(@file_get_contents($f),true) ?: [];
-  $def=$m["default"] ?? "twentytwentyfour";
-  $t=$m["themes"] ?? [];
-  echo (isset($t[$id]) && $t[$id]!=="") ? $t[$id] : $def;
-' "$META" "$THEME_ID" 2>/dev/null)
-[ -n "$THEME_SLUG" ] || THEME_SLUG="$DEFAULT_THEME"
-log "theme_id '${THEME_ID}' -> wp slug '${THEME_SLUG}'"
-
-# Remove CyberPanel default placeholder so WP index.php is served.
+# ---------------------------------------------------------------- 4. WordPress shell
 rm -f "${DOCROOT}/index.html" 2>/dev/null
 
 WP_ADMIN_USER="falconadmin"
 WP_ADMIN_PASS="$(openssl rand -base64 18 | tr -d '/+=' | cut -c1-18)"
 SITE_TITLE="$(echo "$SUB" | sed 's/-/ /g') on Falcon"
+PROVISION_MODE="classic"
 
-if [ -f "${DOCROOT}/wp-config.php" ] && sudo -u "$SITE_USER" -H "$WP" core is-installed --path="$DOCROOT" >/dev/null 2>&1; then
-  log "WordPress already installed at ${DOCROOT}; skipping core install"
-else
-  log "downloading WordPress core"
-  sudo -u "$SITE_USER" -H "$WP" core download --path="$DOCROOT" >>"$LOG" 2>&1 \
+if [ "$RESTORE_TEMPLATE" -eq 1 ]; then
+  PROVISION_MODE="template_restore"
+  log "restoring WordPress from template ${TEMPLATE_SLUG} at ${TEMPLATE_DIR}"
+
+  if [ -f "${DOCROOT}/wp-config.php" ] && sudo -u "$SITE_USER" -H "$WP" core is-installed --path="$DOCROOT" >/dev/null 2>&1; then
+    log "existing WordPress install detected; dropping tables before template import"
+    sudo -u "$SITE_USER" -H "$WP" db reset --yes --path="$DOCROOT" >>"$LOG" 2>&1 || true
+  fi
+
+  log "downloading WordPress core (shell only)"
+  sudo -u "$SITE_USER" -H "$WP" core download --path="$DOCROOT" --force >>"$LOG" 2>&1 \
     || die "wp core download failed"
   log "creating wp-config"
   sudo -u "$SITE_USER" -H "$WP" config create --path="$DOCROOT" \
     --dbname="$DBNAME" --dbuser="$DBUSER" --dbpass="$DBPASS" --dbhost="localhost" --force >>"$LOG" 2>&1 \
     || die "wp config create failed"
-  log "installing WordPress (url=https://${FQDN})"
-  sudo -u "$SITE_USER" -H "$WP" core install --path="$DOCROOT" \
-    --url="https://${FQDN}" --title="$SITE_TITLE" \
-    --admin_user="$WP_ADMIN_USER" --admin_password="$WP_ADMIN_PASS" \
-    --admin_email="$EMAIL" --skip-email >>"$LOG" 2>&1 \
-    || die "wp core install failed"
-fi
 
-# ---------------------------------------------------------------- 5. theme
-log "installing theme ${THEME_SLUG}"
-if ! sudo -u "$SITE_USER" -H "$WP" theme install "$THEME_SLUG" --activate --path="$DOCROOT" >>"$LOG" 2>&1; then
-  log "WARN: theme ${THEME_SLUG} install failed; falling back to ${DEFAULT_THEME}"
-  THEME_SLUG="$DEFAULT_THEME"
-  sudo -u "$SITE_USER" -H "$WP" theme install "$THEME_SLUG" --activate --path="$DOCROOT" >>"$LOG" 2>&1 \
-    || die "fallback theme install failed"
+  log "importing template database"
+  gunzip -c "${TEMPLATE_DIR}/database.sql.gz" | mysql "$DBNAME" \
+    || die "template database import failed"
+
+  log "extracting template wp-content"
+  tar -xzf "${TEMPLATE_DIR}/wp-content.tar.gz" -C "$DOCROOT" \
+    || die "template wp-content extract failed"
+  chown -R "${SITE_USER}:${SITE_USER}" "${DOCROOT}/wp-content" 2>/dev/null || true
+
+  TARGET_URL="https://${FQDN}"
+  STAGING_DOMAIN=""
+  if [ -f "${TEMPLATE_DIR}/meta.json" ]; then
+    STAGING_DOMAIN=$(php -r '
+      $m=json_decode(@file_get_contents($argv[1]),true) ?: [];
+      echo $m["staging_domain"] ?? "";
+    ' "${TEMPLATE_DIR}/meta.json")
+  fi
+  STAGING_DOMAIN="$(echo "$STAGING_DOMAIN" | tr '[:upper:]' '[:lower]')"
+  if [ -n "$STAGING_DOMAIN" ] && ! echo "$STAGING_DOMAIN" | grep -q '\.'; then
+    STAGING_DOMAIN="${STAGING_DOMAIN}.${MASTER}"
+  fi
+
+  log "search-replace URLs -> ${TARGET_URL} (token=${URL_TOKEN}, staging=${STAGING_DOMAIN})"
+  REPLACE_FROM=("$URL_TOKEN")
+  if [ -n "$STAGING_DOMAIN" ]; then
+    REPLACE_FROM+=("https://${STAGING_DOMAIN}" "http://${STAGING_DOMAIN}")
+  fi
+  for OLD in "${REPLACE_FROM[@]}"; do
+    [ -n "$OLD" ] || continue
+    sudo -u "$SITE_USER" -H "$WP" search-replace "$OLD" "$TARGET_URL" \
+      --all-tables --precise --recurse-objects --path="$DOCROOT" >>"$LOG" 2>&1 \
+      || log "WARN: search-replace ${OLD} -> ${TARGET_URL} reported errors (continuing)"
+  done
+
+  if sudo -u "$SITE_USER" -H "$WP" user get "$WP_ADMIN_USER" --path="$DOCROOT" --field=ID >/dev/null 2>&1; then
+    log "resetting existing wp admin user ${WP_ADMIN_USER}"
+    sudo -u "$SITE_USER" -H "$WP" user update "$WP_ADMIN_USER" \
+      --user_pass="$WP_ADMIN_PASS" --user_email="$EMAIL" --path="$DOCROOT" >>"$LOG" 2>&1 \
+      || die "wp user update failed"
+  else
+    log "creating wp admin user ${WP_ADMIN_USER}"
+    sudo -u "$SITE_USER" -H "$WP" user create "$WP_ADMIN_USER" "$EMAIL" \
+      --role=administrator --user_pass="$WP_ADMIN_PASS" --path="$DOCROOT" >>"$LOG" 2>&1 \
+      || die "wp user create failed"
+  fi
+
+  sudo -u "$SITE_USER" -H "$WP" option update blogname "$SITE_TITLE" --path="$DOCROOT" >>"$LOG" 2>&1 || true
+  sudo -u "$SITE_USER" -H "$WP" option update home "$TARGET_URL" --path="$DOCROOT" >>"$LOG" 2>&1 || true
+  sudo -u "$SITE_USER" -H "$WP" option update siteurl "$TARGET_URL" --path="$DOCROOT" >>"$LOG" 2>&1 || true
+
+  ACTIVE_THEME=$(sudo -u "$SITE_USER" -H "$WP" theme list --status=active --field=name --path="$DOCROOT" 2>/dev/null | head -1)
+  THEME_ID="$TEMPLATE_SLUG"
+  log "template restore complete; active theme=${ACTIVE_THEME}"
+else
+  # Classic: fresh WP + theme slug from legacy meta.json map.
+  THEME_SLUG=$(php -r '
+    $f=$argv[1]; $id=$argv[2];
+    $m=json_decode(@file_get_contents($f),true) ?: [];
+    $def=$m["default"] ?? "twentytwentyfour";
+    $t=$m["themes"] ?? [];
+    echo (isset($t[$id]) && $t[$id]!=="") ? $t[$id] : $def;
+  ' "$META" "$THEME_ID" 2>/dev/null)
+  [ -n "$THEME_SLUG" ] || THEME_SLUG="$DEFAULT_THEME"
+  log "theme_id '${THEME_ID}' -> wp slug '${THEME_SLUG}'"
+
+  if [ -f "${DOCROOT}/wp-config.php" ] && sudo -u "$SITE_USER" -H "$WP" core is-installed --path="$DOCROOT" >/dev/null 2>&1; then
+    log "WordPress already installed at ${DOCROOT}; skipping core install"
+  else
+    log "downloading WordPress core"
+    sudo -u "$SITE_USER" -H "$WP" core download --path="$DOCROOT" >>"$LOG" 2>&1 \
+      || die "wp core download failed"
+    log "creating wp-config"
+    sudo -u "$SITE_USER" -H "$WP" config create --path="$DOCROOT" \
+      --dbname="$DBNAME" --dbuser="$DBUSER" --dbpass="$DBPASS" --dbhost="localhost" --force >>"$LOG" 2>&1 \
+      || die "wp config create failed"
+    log "installing WordPress (url=https://${FQDN})"
+    sudo -u "$SITE_USER" -H "$WP" core install --path="$DOCROOT" \
+      --url="https://${FQDN}" --title="$SITE_TITLE" \
+      --admin_user="$WP_ADMIN_USER" --admin_password="$WP_ADMIN_PASS" \
+      --admin_email="$EMAIL" --skip-email >>"$LOG" 2>&1 \
+      || die "wp core install failed"
+  fi
+
+  # ---------------------------------------------------------------- 5. theme (classic only)
+  log "installing theme ${THEME_SLUG}"
+  if ! sudo -u "$SITE_USER" -H "$WP" theme install "$THEME_SLUG" --activate --path="$DOCROOT" >>"$LOG" 2>&1; then
+    log "WARN: theme ${THEME_SLUG} install failed; falling back to ${DEFAULT_THEME}"
+    THEME_SLUG="$DEFAULT_THEME"
+    sudo -u "$SITE_USER" -H "$WP" theme install "$THEME_SLUG" --activate --path="$DOCROOT" >>"$LOG" 2>&1 \
+      || die "fallback theme install failed"
+  fi
+  ACTIVE_THEME=$(sudo -u "$SITE_USER" -H "$WP" theme list --status=active --field=name --path="$DOCROOT" 2>/dev/null | head -1)
+  log "active theme: ${ACTIVE_THEME}"
 fi
-ACTIVE_THEME=$(sudo -u "$SITE_USER" -H "$WP" theme list --status=active --field=name --path="$DOCROOT" 2>/dev/null | head -1)
-log "active theme: ${ACTIVE_THEME}"
 
 # ---------------------------------------------------------------- 6. SSL ensure
 SSL_STATUS="unknown"
@@ -274,9 +359,10 @@ php -r '
   $rec=[
     "subdomain"=>$argv[2], "fqdn"=>$argv[3], "db"=>$argv[4], "db_user"=>$argv[5],
     "wp_admin_user"=>$argv[6], "theme_id"=>$argv[7], "wp_theme"=>$argv[8],
-    "client_id"=>$argv[9], "email"=>$argv[10], "created_at"=>$argv[11],
-    "ssl"=>$argv[12], "ftp_user"=>$argv[13], "ftp_host"=>$argv[14],
-    "ftp_status"=>$argv[15], "status"=>"active"
+    "template_slug"=>$argv[9], "provision_mode"=>$argv[10],
+    "client_id"=>$argv[11], "email"=>$argv[12], "created_at"=>$argv[13],
+    "ssl"=>$argv[14], "ftp_user"=>$argv[15], "ftp_host"=>$argv[16],
+    "ftp_status"=>$argv[17], "status"=>"active"
   ];
   $fh=fopen($f,"c+"); flock($fh,LOCK_EX);
   $raw=stream_get_contents($fh); $a=json_decode($raw,true); if(!is_array($a)) $a=[];
@@ -285,7 +371,7 @@ php -r '
   $a[]=$rec;
   ftruncate($fh,0); rewind($fh); fwrite($fh, json_encode($a, JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT));
   fflush($fh); flock($fh,LOCK_UN); fclose($fh);
-' "$SITES" "$SUB" "$FQDN" "$DBNAME" "$DBUSER" "$WP_ADMIN_USER" "$THEME_ID" "$ACTIVE_THEME" "$CLIENT_ID" "$EMAIL" "$NOW_ISO" "$SSL_STATUS" "$FTP_USER" "$FTP_HOST" "$FTP_STATUS" \
+' "$SITES" "$SUB" "$FQDN" "$DBNAME" "$DBUSER" "$WP_ADMIN_USER" "$THEME_ID" "$ACTIVE_THEME" "$TEMPLATE_SLUG" "$PROVISION_MODE" "$CLIENT_ID" "$EMAIL" "$NOW_ISO" "$SSL_STATUS" "$FTP_USER" "$FTP_HOST" "$FTP_STATUS" \
   || die "failed to write sites.json"
 chmod 640 "$SITES" 2>/dev/null; chgrp "$SITE_USER" "$SITES" 2>/dev/null
 log "recorded site in ${SITES}"
@@ -320,13 +406,15 @@ if [ -f "$BRIDGE" ]; then
 fi
 
 # ---------------------------------------------------------------- 8. output
-log "=== provision success: https://${FQDN}/ (theme=${ACTIVE_THEME}, http=${HTTP_CODE}) ==="
+log "=== provision success: https://${FQDN}/ (mode=${PROVISION_MODE}, theme=${ACTIVE_THEME}, http=${HTTP_CODE}) ==="
 cat <<EOF
 PROVISION_OK
 site_url=https://${FQDN}/
 wp_admin_url=https://${FQDN}/wp-admin/
 wp_admin_user=${WP_ADMIN_USER}
 theme_id=${THEME_ID}
+template_slug=${TEMPLATE_SLUG}
+provision_mode=${PROVISION_MODE}
 wp_theme=${ACTIVE_THEME}
 db_name=${DBNAME}
 ssl=${SSL_STATUS}

@@ -76,8 +76,7 @@ After deploying plugin **v2.0.0**, upgrade the installed plugin:
 GET https://falcon.codes/api/themes/catalog.php
 ```
 
-Returns active templates from `meta.json` files (`active: true`). Used by homepage
-theme picker (Phase 2b: wire `falcon-codes/script.js` to this endpoint).
+Returns active templates from `meta.json` files (`active: true`). Used by the homepage theme picker.
 
 Example response:
 
@@ -100,10 +99,31 @@ Example response:
 }
 ```
 
-## Phase 3 (not built)
+## Phase 3 (done)
 
-- `provision.sh --template restaurant` restores snapshot on customer order
-- Homepage `script.js` loads catalog API instead of hardcoded cards
+### 3A — Template restore on provision
+
+`provision.sh` accepts `--template <slug>` (defaults template slug to `--theme` when
+a capture exists under `/var/lib/falcon-provisioner/templates/{slug}/`):
+
+1. CyberPanel child domain + MariaDB (unchanged)
+2. `wp core download` + `wp config create` (shell only)
+3. Import `database.sql.gz`
+4. Extract `wp-content.tar.gz`
+5. `wp search-replace` `{{SITE_URL}}` + staging domain → `https://{sub}.falcon.codes`
+6. Reset `falconadmin` password (or create if missing) — same Blesta creds + FTP flow
+
+`blesta_poll.php` passes `--template` when the service `theme` field matches a captured
+catalog slug. Bridge fallback unchanged.
+
+Admin user policy: always ensure `falconadmin` exists with a fresh random password
+written to `/var/lib/falcon-provisioner/secrets/{sub}.env`.
+
+### 3B — Dynamic homepage catalog
+
+`falcon-codes/script.js` loads `GET /api/themes/catalog.php` and renders theme cards
+dynamically (thumbnail, name, description, preview link). Falls back to a friendly
+message + link to `/portal/order/` if the API is empty or fails.
 
 ## Deploy
 

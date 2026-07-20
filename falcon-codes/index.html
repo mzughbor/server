@@ -371,120 +371,19 @@
           <div class="theme-carousel">
             <button type="button" class="theme-scroll-btn theme-scroll-prev" aria-label="Scroll themes left">←</button>
             <div class="theme-scroll" id="themeScroll" tabindex="0">
-              <div class="theme-grid">
-            <article class="theme-card" data-theme="studio" data-label="Studio" data-url="studio-demo.falcon.codes">
-              <div class="theme-thumb theme-thumb-studio" aria-hidden="true">
-                <span class="theme-thumb-nav"></span>
-                <span class="theme-thumb-hero"></span>
-                <span class="theme-thumb-line"></span>
-                <span class="theme-thumb-line short"></span>
-              </div>
-              <div class="theme-body">
-                <span class="theme-tag">CREATIVE</span>
-                <h3>Studio</h3>
-                <p>Clean portfolio layout for photographers, designers, and creators.</p>
-                <div class="theme-actions">
-                  <button type="button" class="btn btn-outline btn-sm theme-preview-btn">Preview Demo</button>
-                  <button type="button" class="btn btn-primary btn-sm theme-choose-btn">Choose This</button>
-                </div>
-              </div>
-            </article>
-
-            <article class="theme-card" data-theme="cafe" data-label="Cafe" data-url="cafe-demo.falcon.codes">
-              <div class="theme-thumb theme-thumb-cafe" aria-hidden="true">
-                <span class="theme-thumb-nav"></span>
-                <span class="theme-thumb-hero"></span>
-                <span class="theme-thumb-line"></span>
-                <span class="theme-thumb-line short"></span>
-              </div>
-              <div class="theme-body">
-                <span class="theme-tag">RESTAURANT</span>
-                <h3>Cafe</h3>
-                <p>Warm one-page site for cafes, bakeries, and local food spots.</p>
-                <div class="theme-actions">
-                  <button type="button" class="btn btn-outline btn-sm theme-preview-btn">Preview Demo</button>
-                  <button type="button" class="btn btn-primary btn-sm theme-choose-btn">Choose This</button>
-                </div>
-              </div>
-            </article>
-
-            <article class="theme-card" data-theme="saas" data-label="SaaS" data-url="saas-demo.falcon.codes">
-              <div class="theme-thumb theme-thumb-saas" aria-hidden="true">
-                <span class="theme-thumb-nav"></span>
-                <span class="theme-thumb-hero"></span>
-                <span class="theme-thumb-line"></span>
-                <span class="theme-thumb-line short"></span>
-              </div>
-              <div class="theme-body">
-                <span class="theme-tag">STARTUP</span>
-                <h3>SaaS</h3>
-                <p>Conversion-focused landing page for apps, tools, and software products.</p>
-                <div class="theme-actions">
-                  <button type="button" class="btn btn-outline btn-sm theme-preview-btn">Preview Demo</button>
-                  <button type="button" class="btn btn-primary btn-sm theme-choose-btn">Choose This</button>
-                </div>
-              </div>
-            </article>
-
-            <article class="theme-card" data-theme="portfolio" data-label="Portfolio" data-url="portfolio-demo.falcon.codes">
-              <div class="theme-thumb theme-thumb-portfolio" aria-hidden="true">
-                <span class="theme-thumb-nav"></span>
-                <span class="theme-thumb-hero"></span>
-                <span class="theme-thumb-line"></span>
-                <span class="theme-thumb-line short"></span>
-              </div>
-              <div class="theme-body">
-                <span class="theme-tag">PERSONAL</span>
-                <h3>Portfolio</h3>
-                <p>Simple personal brand page with projects, bio, and contact sections.</p>
-                <div class="theme-actions">
-                  <button type="button" class="btn btn-outline btn-sm theme-preview-btn">Preview Demo</button>
-                  <button type="button" class="btn btn-primary btn-sm theme-choose-btn">Choose This</button>
-                </div>
-              </div>
-            </article>
-
-            <article class="theme-card" data-theme="realestate" data-label="Real Estate" data-url="homes-demo.falcon.codes">
-              <div class="theme-thumb theme-thumb-realestate" aria-hidden="true">
-                <span class="theme-thumb-nav"></span>
-                <span class="theme-thumb-hero"></span>
-                <span class="theme-thumb-line"></span>
-                <span class="theme-thumb-line short"></span>
-              </div>
-              <div class="theme-body">
-                <span class="theme-tag">REAL ESTATE</span>
-                <h3>Real Estate</h3>
-                <p>Listings-focused layout with hero search and property highlights.</p>
-                <div class="theme-actions">
-                  <button type="button" class="btn btn-outline btn-sm theme-preview-btn">Preview Demo</button>
-                  <button type="button" class="btn btn-primary btn-sm theme-choose-btn">Choose This</button>
-                </div>
-              </div>
-            </article>
-
-            <article class="theme-card" data-theme="agency" data-label="Agency" data-url="agency-demo.falcon.codes">
-              <div class="theme-thumb theme-thumb-agency" aria-hidden="true">
-                <span class="theme-thumb-nav"></span>
-                <span class="theme-thumb-hero"></span>
-                <span class="theme-thumb-line"></span>
-                <span class="theme-thumb-line short"></span>
-              </div>
-              <div class="theme-body">
-                <span class="theme-tag">BUSINESS</span>
-                <h3>Agency</h3>
-                <p>Professional services page with services, proof, and lead capture.</p>
-                <div class="theme-actions">
-                  <button type="button" class="btn btn-outline btn-sm theme-preview-btn">Preview Demo</button>
-                  <button type="button" class="btn btn-primary btn-sm theme-choose-btn">Choose This</button>
-                </div>
-              </div>
-            </article>
+              <div class="theme-grid" id="themeGrid">
+                <!-- Theme cards loaded from /api/themes/catalog.php (script.js) -->
               </div>
             </div>
             <button type="button" class="theme-scroll-btn theme-scroll-next" aria-label="Scroll themes right">→</button>
           </div>
 
-          <p class="theme-scroll-hint">Scroll or use arrows to browse all themes</p>
+          <p class="theme-catalog-loading" id="themeCatalogLoading">Loading themes…</p>
+          <div class="theme-catalog-empty" id="themeCatalogEmpty" hidden>
+            <p>Theme demos are being prepared. You can still <a href="https://falcon.codes/portal/order/">start your free trial</a> and pick a theme at checkout.</p>
+          </div>
+
+          <p class="theme-scroll-hint" id="themeScrollHint">Scroll or use arrows to browse all themes</p>
 
           <p class="theme-selected-note" id="themeSelectedNote" hidden>
             Selected theme: <strong id="themeSelectedName"></strong>.

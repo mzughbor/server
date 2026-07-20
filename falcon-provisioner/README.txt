@@ -260,6 +260,30 @@ but not enabled by default to keep the trial form frictionless.
 Trigger cadence: /etc/cron.d/falcon-provisioner runs the poller every minute.
 
 ------------------------------------------------------------------------------
+7c. PHASE 3 - WP TEMPLATE SNAPSHOT RESTORE + DYNAMIC HOMEPAGE CATALOG
+------------------------------------------------------------------------------
+Template captures live under /var/lib/falcon-provisioner/templates/{slug}/:
+  meta.json, database.sql.gz (URLs tokenized as {{SITE_URL}}), wp-content.tar.gz
+
+Capture (staging site):
+  /opt/falcon-provisioner/bin/snapshot_capture.sh \
+    --domain preview-restaurant.falcon.codes --slug restaurant --name "Restaurant"
+
+Restore on customer order (provision.sh):
+  --template restaurant   (auto when Blesta service theme=restaurant and capture exists)
+  Flow: child domain + DB -> wp core shell -> import DB -> extract wp-content ->
+        wp search-replace {{SITE_URL}} + staging URL -> https://{sub}.falcon.codes ->
+        reset falconadmin password (secrets/{sub}.env). FTP + Blesta creds unchanged.
+
+Poller: blesta_poll.php passes --template when theme slug matches a captured template.
+Bridge.json fallback unchanged.
+
+Public catalog: GET https://falcon.codes/api/themes/catalog.php (active templates).
+Homepage falcon-codes/script.js renders theme cards from that API.
+
+Full doc: /srv/falcon-docs/falcon-theme-snapshots.md
+
+------------------------------------------------------------------------------
 8. DEMO HOLD vs TRIAL LENGTH
 ------------------------------------------------------------------------------
 - "Demo hold" = the 45-minute pre-order subdomain reservation (reservations.json).

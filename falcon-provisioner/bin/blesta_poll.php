@@ -66,6 +66,15 @@ function write_json_locked(string $path, array $data): void {
     @chmod($path, 0640);
 }
 
+/** True when a captured WP template exists for this catalog slug. */
+function template_exists(string $slug): bool {
+    if ($slug === '' || $slug === 'default') return false;
+    $dir = STATE_DIR . '/templates/' . $slug;
+    return is_dir($dir)
+        && is_file($dir . '/database.sql.gz')
+        && is_file($dir . '/wp-content.tar.gz');
+}
+
 /** Load the Blesta config-option map {field => option_pricing_id}. */
 function load_option_map(): array {
     $m = json_decode((string)@file_get_contents(OPTMAP), true);
@@ -194,15 +203,19 @@ foreach ($rows as $row) {
     }
     if ($sub === '') { continue; }
 
-    plog("provisioning service {$svcId} (client {$clientId}, {$email}) -> {$sub}.".MASTER." theme={$theme} [source={$source}]");
+    plog("provisioning service {$svcId} (client {$clientId}, {$email}) -> {$sub}.".MASTER
+        . " theme={$theme} template=" . (template_exists($theme) ? $theme : 'none') . " [source={$source}]");
 
     $cmd = escapeshellcmd(PROVISION)
         . ' --subdomain ' . escapeshellarg($sub)
         . ' --theme ' . escapeshellarg($theme)
         . ' --email ' . escapeshellarg($email !== '' ? $email : 'trial@' . MASTER)
         . ' --client_id ' . escapeshellarg((string)$clientId)
-        . ' --token ' . escapeshellarg($token)
-        . ' 2>&1';
+        . ' --token ' . escapeshellarg($token);
+    if (template_exists($theme)) {
+        $cmd .= ' --template ' . escapeshellarg($theme);
+    }
+    $cmd .= ' 2>&1';
     exec($cmd, $pout, $prc);
     $poutStr = implode("\n", $pout);
 
