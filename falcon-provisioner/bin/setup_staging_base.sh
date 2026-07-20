@@ -56,12 +56,12 @@ fi
 mkdir -p "$STAGING_BASE_DIR"
 
 log "exporting database snapshot"
-TMPSQL="$(mktemp /tmp/falcon-staging-base.XXXXXX.sql)"
-trap 'rm -f "$TMPSQL"' EXIT
+TMPSQL="$(sudo -u "$SITE_USER" mktemp "/tmp/falcon-staging-base.XXXXXX.sql")"
+trap 'sudo -u "$SITE_USER" rm -f "$TMPSQL"' EXIT
 sudo -u "$SITE_USER" -H "$WP" db export "$TMPSQL" --path="$DOCROOT" >>"$LOG" 2>&1 \
   || die "database export failed"
 gzip -cf "$TMPSQL" > "${STAGING_BASE_DIR}/database.sql.gz"
-rm -f "$TMPSQL"
+sudo -u "$SITE_USER" rm -f "$TMPSQL"
 trap - EXIT
 
 log "archiving wp-content"
