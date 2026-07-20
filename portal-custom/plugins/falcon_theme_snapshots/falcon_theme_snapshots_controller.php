@@ -31,4 +31,22 @@ class FalconThemeSnapshotsController extends AppController
 
         $this->company_id = Configure::get('Blesta.company_id');
     }
+
+    /**
+     * Reject non-AJAX access to JSON endpoints (Blesta uses isAjax(), not requireAjax()).
+     *
+     * @return bool True when the request may continue
+     */
+    protected function requireJsonAjax()
+    {
+        if (!$this->isAjax()) {
+            $this->outputAsJson([
+                'success' => false,
+                'message' => 'Invalid request.',
+            ]);
+            return false;
+        }
+
+        return true;
+    }
 }

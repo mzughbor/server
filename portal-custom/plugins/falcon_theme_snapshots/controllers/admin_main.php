@@ -69,12 +69,16 @@ class AdminMain extends FalconThemeSnapshotsController
      */
     public function capture()
     {
-        $this->requireAjax();
+        if (!$this->requireJsonAjax()) {
+            return false;
+        }
 
         if (!isset($this->post['template_id'])) {
             $this->outputAsJson(['success' => false, 'message' => 'missing template_id']);
             return false;
         }
+
+        @set_time_limit(300);
 
         $template_id = (int) $this->post['template_id'];
         $output = $this->FalconWpTemplates->capture($template_id);
@@ -195,12 +199,16 @@ class AdminMain extends FalconThemeSnapshotsController
      */
     public function provision_staging()
     {
-        $this->requireAjax();
+        if (!$this->requireJsonAjax()) {
+            return false;
+        }
 
         if (!isset($this->post['template_id'])) {
             $this->outputAsJson(['success' => false, 'message' => 'missing template_id']);
             return false;
         }
+
+        @set_time_limit(300);
 
         $template = $this->FalconWpTemplates->get((int) $this->post['template_id']);
         if (!$template || (int) $template->company_id !== (int) $this->company_id) {
@@ -281,7 +289,11 @@ class AdminMain extends FalconThemeSnapshotsController
      */
     public function test_provision()
     {
-        $this->requireAjax();
+        if (!$this->requireJsonAjax()) {
+            return false;
+        }
+
+        @set_time_limit(300);
 
         $subdomain = isset($this->post['subdomain'])
             ? strtolower(trim((string) $this->post['subdomain']))

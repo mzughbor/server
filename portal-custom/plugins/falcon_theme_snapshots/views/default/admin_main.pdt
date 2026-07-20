@@ -111,10 +111,14 @@
                     '<?php echo $this->Html->safe($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/capture/'); ?>',
                     { template_id: id },
                     function(data) {
-                        location.reload();
+                        if (data && data.success) {
+                            location.reload();
+                        } else {
+                            alert((data && data.message) ? data.message : 'Capture failed.');
+                        }
                     },
-                    function() {
-                        location.reload();
+                    function(xhr) {
+                        alert('Capture request failed (HTTP ' + (xhr && xhr.status ? xhr.status : '?') + ').');
                     },
                     { dataType: 'json', timeout: 300000 }
                 ).always(function() {
@@ -134,10 +138,14 @@
                     '<?php echo $this->Html->safe($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/provision_staging/'); ?>',
                     { template_id: id },
                     function(data) {
-                        location.reload();
+                        if (data && data.success) {
+                            location.reload();
+                        } else {
+                            alert((data && data.message) ? data.message : 'Staging provision failed.');
+                        }
                     },
-                    function() {
-                        location.reload();
+                    function(xhr) {
+                        alert('Provision request failed (HTTP ' + (xhr && xhr.status ? xhr.status : '?') + ').');
                     },
                     { dataType: 'json', timeout: 300000 }
                 ).always(function() {
