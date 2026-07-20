@@ -50,9 +50,9 @@ ensure_package(){
   pp_id=$(q "SELECT pp.id FROM package_pricing pp JOIN pricings pr ON pr.id=pp.pricing_id
              WHERE pp.package_id=$pkg_id AND pr.period='month' AND pr.term=1 LIMIT 1;")
   if [ -z "$pp_id" ]; then
-    mysql "$DB" -e "INSERT INTO pricings (company_id,term,period,price,setup_fee,cancel_fee,currency)
-      VALUES ($COMPANY,1,'month',$price,0,0,'USD');"
-    local new_pr; new_pr=$(q "SELECT LAST_INSERT_ID();")
+    local new_pr
+    new_pr=$(mysql "$DB" -N -B -e "INSERT INTO pricings (company_id,term,period,price,setup_fee,cancel_fee,currency)
+      VALUES ($COMPANY,1,'month',$price,0,0,'USD'); SELECT LAST_INSERT_ID();")
     q "INSERT INTO package_pricing (package_id,pricing_id,\`default\`) VALUES ($pkg_id,$new_pr,1);"
     pp_id=$(q "SELECT id FROM package_pricing WHERE package_id=$pkg_id ORDER BY id DESC LIMIT 1;")
     echo "    pricing package_pricing_id=$pp_id price=\$$price"
