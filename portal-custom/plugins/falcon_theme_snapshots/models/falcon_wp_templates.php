@@ -284,9 +284,36 @@ class FalconWpTemplates extends FalconThemeSnapshotsModel
                 $template->staging_admin_url = $creds['WP_ADMIN_URL']
                     ?? ('https://' . $template->staging_domain . '/wp-admin/');
             }
+            $template->catalog_visible = $this->isCatalogVisible($template);
         }
 
         return $templates;
+    }
+
+    /**
+     * Whether capture artifacts exist for catalog API listing (matches catalog.php).
+     *
+     * @param string $slug
+     * @return bool
+     */
+    public function captureReady($slug)
+    {
+        $dir = self::STORAGE_ROOT . DS . $slug;
+
+        return is_dir($dir)
+            && is_readable($dir . DS . 'database.sql.gz')
+            && is_readable($dir . DS . 'wp-content.tar.gz');
+    }
+
+    /**
+     * Whether the template is returned by GET /api/themes/catalog.php.
+     *
+     * @param stdClass $template
+     * @return bool
+     */
+    public function isCatalogVisible($template)
+    {
+        return !empty($template->active) && $this->captureReady($template->slug);
     }
 
     /**

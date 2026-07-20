@@ -172,20 +172,28 @@ class AdminMain extends FalconThemeSnapshotsController
 
         $active = (isset($this->get[1]) && $this->get[1] === '1') ? 1 : 0;
         $updated = $this->FalconWpTemplates->setActive($template->id, $active);
+        $errors = $this->FalconWpTemplates->errors();
 
-        if ($updated === false || ($errors = $this->FalconWpTemplates->errors())) {
+        if ($updated === false || $errors) {
             $this->flashMessage(
                 'error',
-                $errors['active']['failed'] ?? Language::_('AdminMain.!error.activate.failed', true),
+                is_array($errors) ? ($errors['active']['failed'] ?? Language::_('AdminMain.!error.activate.failed', true)) : Language::_('AdminMain.!error.activate.failed', true),
+                null,
+                false
+            );
+        } elseif ($active) {
+            $this->flashMessage(
+                'message',
+                $this->FalconWpTemplates->captureReady($updated->slug)
+                    ? Language::_('AdminMain.!success.activated', true)
+                    : Language::_('AdminMain.!success.activated_pending_capture', true),
                 null,
                 false
             );
         } else {
             $this->flashMessage(
                 'message',
-                $active
-                    ? Language::_('AdminMain.!success.activated', true)
-                    : Language::_('AdminMain.!success.deactivated', true),
+                Language::_('AdminMain.!success.deactivated', true),
                 null,
                 false
             );

@@ -62,10 +62,12 @@
                         <?php } ?>
                     </td>
                     <td>
-                        <?php if (!empty($template->active)) { ?>
-                        <span class="open"><?php $this->_('AdminMain.index.yes'); ?></span>
+                        <?php if (!empty($template->catalog_visible)) { ?>
+                        <span class="open"><?php $this->_('AdminMain.index.catalog_live'); ?></span>
+                        <?php } elseif (!empty($template->active)) { ?>
+                        <span class="closed"><?php $this->_('AdminMain.index.catalog_pending'); ?></span>
                         <?php } else { ?>
-                        <span class="closed"><?php $this->_('AdminMain.index.no'); ?></span>
+                        <span class="closed"><?php $this->_('AdminMain.index.catalog_off'); ?></span>
                         <?php } ?>
                     </td>
                     <td><?php echo !empty($template->last_captured) ? $this->Date->cast($template->last_captured) : '—'; ?></td>

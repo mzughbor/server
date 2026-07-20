@@ -36,4 +36,12 @@ class FalconThemeSnapshotsModel extends AppModel
     {
         return date('Y-m-d H:i:s');
     }
+
+    /**
+     * @return array|false
+     */
+    public function errors()
+    {
+        return $this->Input->errors();
+    }
 }
