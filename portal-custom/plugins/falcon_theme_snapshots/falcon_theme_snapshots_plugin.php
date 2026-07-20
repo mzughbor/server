@@ -60,7 +60,6 @@ class FalconThemeSnapshotsPlugin extends Plugin
                 setField('is_customized', ['type' => 'tinyint', 'size' => 1, 'default' => 0])->
                 setField('date_created', ['type' => 'datetime'])->
                 setKey(['id'], 'primary')->
-                setKey(['snapshot_id'], 'index')->
                 setKey(['snapshot_id', 'relative_path'], 'unique')->
                 create('falcon_theme_snapshot_files', true);
         } catch (Exception $e) {

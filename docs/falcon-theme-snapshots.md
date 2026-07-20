@@ -46,7 +46,7 @@ Branding work lives in `portal-custom/app/views/client/falcon/` (see
 | is_customized | tinyint | 1 = known branding file |
 | date_created | datetime | |
 
-Unique key: `(snapshot_id, relative_path)`.
+Unique key: `(snapshot_id, relative_path)` — also serves lookups by `snapshot_id` (Blesta names indexes from the first column; do not add a separate `snapshot_id` index).
 
 ## Install
 
