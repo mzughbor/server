@@ -22,7 +22,7 @@ next_pkg_id_value(){ q "SELECT COALESCE(MAX(id_value),0)+1 FROM packages WHERE c
 
 ensure_package(){
   local key="$1" name="$2" price="$3" html="$4" force_id="${5:-}"
-  local pkg_id
+  local pkg_id=""
   if [ -n "$force_id" ]; then
     pkg_id=$(q "SELECT id FROM packages WHERE id=$force_id AND company_id=$COMPANY LIMIT 1;")
   fi
@@ -46,7 +46,7 @@ ensure_package(){
   fi
 
   # pricing row (1 month)
-  local pp_id pr_id
+  local pp_id="" pr_id=""
   pp_id=$(q "SELECT pp.id FROM package_pricing pp JOIN pricings pr ON pr.id=pp.pricing_id
              WHERE pp.package_id=$pkg_id AND pr.period='month' AND pr.term=1 LIMIT 1;")
   if [ -z "$pp_id" ]; then
