@@ -1,11 +1,11 @@
 {
-  "subdomain": 76,
-  "theme": 77,
-  "site_url": 78,
-  "wp_admin_url": 79,
-  "wp_user": 80,
-  "wp_pass": 81,
-  "ftp_access": 82,
-  "ftp_user": 83,
-  "ftp_pass": 84
+  "subdomain": 85,
+  "theme": 86,
+  "site_url": 87,
+  "wp_admin_url": 88,
+  "wp_user": 89,
+  "wp_pass": 90,
+  "ftp_access": 91,
+  "ftp_user": 92,
+  "ftp_pass": 93
 }

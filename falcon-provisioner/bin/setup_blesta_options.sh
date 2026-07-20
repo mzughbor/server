@@ -34,6 +34,25 @@ q "DELETE FROM order_settings WHERE company_id=1 AND \`key\` IN ('antifraud','an
 echo "order_forms(id=1): $(q "SELECT CONCAT('manual_review=',manual_review,' captcha=',require_captcha,' tos=',require_tos) FROM order_forms WHERE id=1;")"
 echo "packages(id=$PKG): manual_activation=$(q "SELECT manual_activation FROM packages WHERE id=$PKG;") module_id=$(q "SELECT module_id FROM packages WHERE id=$PKG;")"
 
+echo "=== Section A2: minimal signup / contact fields (order + client area) ==="
+# Blesta stores these as base64-encoded JSON arrays in company_settings.
+# Before: shown=["address1","city","country","phone"], required=[]
+# After:  shown=["first_name","last_name","email"], required=["email","first_name","last_name"]
+# Hides address/country/state/zip/fax/company/title from order checkout.
+MIN_SHOWN='WyJmaXJzdF9uYW1lIiwibGFzdF9uYW1lIiwiZW1haWwiXQ=='
+MIN_REQUIRED='WyJlbWFpbCIsImZpcnN0X25hbWUiLCJsYXN0X25hbWUiXQ=='
+MIN_READONLY='W10='
+q "INSERT INTO company_settings (company_id,\`key\`,value,encrypted) VALUES (1,'shown_contact_fields','${MIN_SHOWN}',0)
+   ON DUPLICATE KEY UPDATE value='${MIN_SHOWN}';"
+q "INSERT INTO company_settings (company_id,\`key\`,value,encrypted) VALUES (1,'required_contact_fields','${MIN_REQUIRED}',0)
+   ON DUPLICATE KEY UPDATE value='${MIN_REQUIRED}';"
+q "INSERT INTO company_settings (company_id,\`key\`,value,encrypted) VALUES (1,'read_only_contact_fields','${MIN_READONLY}',0)
+   ON DUPLICATE KEY UPDATE value='${MIN_READONLY}';"
+q "INSERT INTO company_settings (company_id,\`key\`,value,encrypted) VALUES (1,'show_client_tax_id','false',0)
+   ON DUPLICATE KEY UPDATE value='false';"
+echo "shown_contact_fields=$(echo WyJmaXJzdF9uYW1lIiwibGFzdF9uYW1lIiwiZW1haWwi | base64 -d 2>/dev/null || true)"
+echo "required_contact_fields=$(echo WyJlbWFpbCIsImZpc3RfbmFtZSIsImxhc3RfbmFtZSJd | base64 -d 2>/dev/null || true)"
+
 echo "=== Section B: ensure Blesta system cron runs (activates paid-pending services) ==="
 BLESTA_ROOT="${BLESTA_ROOT:-/home/falcon.codes/public_html/portal}"
 CRON_D=/etc/cron.d/falcon-provisioner

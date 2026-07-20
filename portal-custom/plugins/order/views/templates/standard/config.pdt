@@ -239,7 +239,7 @@
   // package_options.id for the two capturable options. The DOM input name uses
   // the OPTION id (configoptions[<option_id>]); see blesta_options.json for the
   // field -> option_pricing_id map the poller reads.
-  var OPTS = { subdomain: 58, theme: 59 };
+  var OPTS = { subdomain: 67, theme: 68 };
   var SS = { subdomain: "falcon_subdomain", theme: "falcon_theme", token: "falcon_token" };
 
   function qs(name) {
