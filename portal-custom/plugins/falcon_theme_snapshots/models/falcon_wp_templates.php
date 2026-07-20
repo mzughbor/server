@@ -14,7 +14,9 @@ class FalconWpTemplates extends FalconThemeSnapshotsModel
     public const CAPTURE_BIN = '/opt/falcon-provisioner/bin/snapshot_capture.sh';
     public const CAPTURE_LOG = '/var/log/falcon-provisioner-capture.log';
     public const ADMIN_TEST_BIN = '/opt/falcon-provisioner/bin/admin_test_provision.sh';
+    public const CLONE_STAGING_BIN = '/opt/falcon-provisioner/bin/clone_staging_wp.sh';
     public const PROVISION_LOG = '/var/log/falcon-provisioner.log';
+    public const STAGING_SECRETS_DIR = '/var/lib/falcon-provisioner/secrets';
 
     public function __construct()
     {
@@ -54,7 +56,12 @@ class FalconWpTemplates extends FalconThemeSnapshotsModel
         ];
 
         $this->Record->insert('falcon_wp_templates', $fields);
-        return $this->get($this->Record->lastInsertId());
+        $template = $this->get($this->Record->lastInsertId());
+        if ($template && !empty($template->staging_domain)) {
+            $this->maybeProvisionStaging($template);
+        }
+
+        return $template;
     }
 
     /**
@@ -88,6 +95,35 @@ class FalconWpTemplates extends FalconThemeSnapshotsModel
         $fields['date_updated'] = $this->mysqlNow();
 
         $this->Record->where('id', '=', $template_id)->update('falcon_wp_templates', $fields);
+
+        $updated = $this->get($template_id);
+        if ($updated) {
+            $this->syncMetaActive($template->slug, (bool) $updated->active, $updated);
+            if (!empty($updated->staging_domain) && !$this->stagingSiteReady($updated->staging_domain)) {
+                $this->maybeProvisionStaging($updated);
+            }
+        }
+
+        return $updated;
+    }
+
+    /**
+     * Toggle catalog visibility without requiring full edit form fields.
+     *
+     * @param int $template_id
+     * @param int $active 0 or 1
+     * @return stdClass|false
+     */
+    public function setActive($template_id, $active)
+    {
+        if (!($template = $this->get($template_id))) {
+            return false;
+        }
+
+        $this->Record->where('id', '=', $template_id)->update('falcon_wp_templates', [
+            'active' => (int) $active,
+            'date_updated' => $this->mysqlNow(),
+        ]);
 
         $updated = $this->get($template_id);
         if ($updated) {
@@ -249,6 +285,145 @@ class FalconWpTemplates extends FalconThemeSnapshotsModel
         return $this->Record->select(['id'])->from('falcon_wp_templates')->
             where('company_id', '=', $company_id)->
             numResults();
+    }
+
+    /**
+     * Clone golden staging-base to the template staging domain when missing.
+     *
+     * @param stdClass $template
+     * @return array|false Parsed clone output on success
+     */
+    public function maybeProvisionStaging($template)
+    {
+        if (empty($template->staging_domain)) {
+            return false;
+        }
+
+        if ($this->stagingSiteReady($template->staging_domain)) {
+            return ['status' => 'already_exists'];
+        }
+
+        return $this->provisionStaging($template);
+    }
+
+    /**
+     * @param stdClass $template
+     * @return array|false
+     */
+    public function provisionStaging($template)
+    {
+        if (empty($template->staging_domain)) {
+            $this->Input->setErrors([
+                'staging' => ['missing' => Language::_('FalconWpTemplates.!error.staging_domain.empty', true)]
+            ]);
+            return false;
+        }
+
+        $cmd = sprintf(
+            'sudo %s --domain %s 2>&1',
+            escapeshellarg(self::CLONE_STAGING_BIN),
+            escapeshellarg($template->staging_domain)
+        );
+
+        $started = gmdate('Y-m-d H:i:s');
+        $this->logProvision(sprintf(
+            '[staging_clone_start] template_id=%d slug=%s staging=%s cmd=%s',
+            (int) $template->id,
+            $template->slug,
+            $template->staging_domain,
+            $cmd
+        ));
+
+        $output = [];
+        $code = 0;
+        exec($cmd, $output, $code);
+        $outputText = implode("\n", $output);
+        $parsed = $this->parseStagingCloneOutput($outputText);
+
+        $this->logProvision(sprintf(
+            '[staging_clone_finish] template_id=%d slug=%s exit=%d started=%s output=%s',
+            (int) $template->id,
+            $template->slug,
+            $code,
+            $started,
+            $outputText !== '' ? $outputText : '(empty)'
+        ));
+
+        if ($code !== 0 || !preg_match('/^STAGING_CLONE_OK/m', $outputText)) {
+            $this->Input->setErrors([
+                'staging' => [
+                    'failed' => Language::_('FalconWpTemplates.!error.staging.failed', true, $outputText)
+                ]
+            ]);
+            return false;
+        }
+
+        return $parsed ?: ['status' => 'created'];
+    }
+
+    /**
+     * @param string $staging_domain
+     * @return bool
+     */
+    public function stagingSiteReady($staging_domain)
+    {
+        $domain = strtolower(trim((string) $staging_domain));
+        if ($domain === '') {
+            return false;
+        }
+
+        $docroot = '/home/falcon.codes/' . $domain . '/wp-config.php';
+        $cmd = sprintf('test -f %s', escapeshellarg($docroot));
+        exec($cmd, $unused, $code);
+
+        return $code === 0;
+    }
+
+    /**
+     * @param string $staging_domain
+     * @return array|null
+     */
+    public function getStagingCredentials($staging_domain)
+    {
+        $domain = strtolower(trim((string) $staging_domain));
+        if ($domain === '' || !preg_match('/\.falcon\.codes$/', $domain)) {
+            return null;
+        }
+
+        $sub = preg_replace('/\.falcon\.codes$/', '', $domain);
+        $secretFile = self::STAGING_SECRETS_DIR . '/staging-' . $sub . '.env';
+        if (!is_readable($secretFile)) {
+            return null;
+        }
+
+        $creds = [];
+        foreach (file($secretFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+            if (strpos($line, '=') === false) {
+                continue;
+            }
+            [$key, $value] = explode('=', $line, 2);
+            $creds[$key] = $value;
+        }
+
+        return $creds ?: null;
+    }
+
+    /**
+     * @param string $outputText
+     * @return array
+     */
+    private function parseStagingCloneOutput($outputText)
+    {
+        $parsed = [];
+        foreach (explode("\n", $outputText) as $line) {
+            if (strpos($line, '=') === false) {
+                continue;
+            }
+            [$key, $value] = explode('=', $line, 2);
+            $parsed[$key] = $value;
+        }
+
+        return $parsed;
     }
 
     /**
@@ -444,6 +619,7 @@ class FalconWpTemplates extends FalconThemeSnapshotsModel
 
         if ($edit) {
             unset($rules['company_id'], $rules['slug']);
+            $rules = array_intersect_key($rules, $vars);
         }
 
         return $rules;

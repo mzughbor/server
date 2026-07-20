@@ -131,6 +131,34 @@ written to `/var/lib/falcon-provisioner/secrets/{sub}.env`.
 dynamically (thumbnail, name, description, preview link). Falls back to a friendly
 message + link to `/portal/order/` if the API is empty or fails.
 
+## Phase 4 — Staging auto-clone
+
+Golden base WordPress at `wp-staging-base.falcon.codes` with tarball cache at
+`/var/lib/falcon-provisioner/staging-base/`. One-time VPS setup:
+
+```bash
+ssh falcons 'bash -s' < falcon-provisioner/bin/setup_staging_base.sh
+ssh falcons 'bash -s' < falcon-provisioner/bin/setup_template_storage.sh   # adds clone sudo
+```
+
+When an admin **adds or edits** a template with a `staging_domain` that does not
+exist yet, Blesta runs `clone_staging_wp.sh` automatically (or use **Provision Staging**
+on the list page). The clone:
+
+1. Creates CyberPanel child domain + MariaDB
+2. Restores WP from golden base tarball (or live base fallback)
+3. Search-replaces URLs to the staging domain
+4. Writes WP admin creds to `/var/lib/falcon-provisioner/secrets/staging-{sub}.env`
+
+Then customize the staging site, **Capture**, and **Activate** as before.
+
+Manual clone:
+
+```bash
+sudo /opt/falcon-provisioner/bin/clone_staging_wp.sh \
+  --domain preview-restaurant.falcon.codes
+```
+
 ## Deploy
 
 ```bash
@@ -145,6 +173,8 @@ Plugin code updates do **not** require reinstall; bump `config.json` version and
 ```
 portal-custom/plugins/falcon_theme_snapshots/   # Blesta plugin
 falcon-provisioner/bin/snapshot_capture.sh
+falcon-provisioner/bin/clone_staging_wp.sh
+falcon-provisioner/bin/setup_staging_base.sh
 falcon-provisioner/bin/setup_template_storage.sh
 falcon-provisioner/bin/setup_catalog_db.sh
 falcon-provisioner/web/api/themes/catalog.php

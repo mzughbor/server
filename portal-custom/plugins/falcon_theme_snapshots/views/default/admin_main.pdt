@@ -57,6 +57,7 @@
                     <td>
                         <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/edit/' . (int) $template->id . '/'); ?>"><?php $this->_('AdminMain.index.action_edit'); ?></a>,
                         <a href="#" class="capture-template" data-id="<?php echo (int) ($template->id ?? 0); ?>"><?php $this->_('AdminMain.index.action_capture'); ?></a>,
+                        <a href="#" class="provision-staging" data-id="<?php echo (int) ($template->id ?? 0); ?>"><?php $this->_('AdminMain.index.action_provision'); ?></a>,
                         <?php if (!empty($template->active)) { ?>
                         <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/activate/' . (int) $template->id . '/0/'); ?>"><?php $this->_('AdminMain.index.action_deactivate'); ?></a>,
                         <?php } else { ?>
@@ -93,6 +94,29 @@
                 $(this).blestaRequest(
                     'POST',
                     '<?php echo $this->Html->safe($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/capture/'); ?>',
+                    { template_id: id },
+                    function(data) {
+                        location.reload();
+                    },
+                    function() {
+                        location.reload();
+                    },
+                    { dataType: 'json', timeout: 300000 }
+                ).always(function() {
+                    $link.removeClass('disabled').text(originalText);
+                });
+            });
+
+            $('.provision-staging').on('click', function(e) {
+                e.preventDefault();
+                var id = $(this).data('id');
+                var $link = $(this);
+                var originalText = $link.text();
+                $link.addClass('disabled').text('<?php echo $this->_('AdminMain.index.provision_running', true); ?>');
+
+                $(this).blestaRequest(
+                    'POST',
+                    '<?php echo $this->Html->safe($this->base_uri . 'plugin/falcon_theme_snapshots/admin_main/provision_staging/'); ?>',
                     { template_id: id },
                     function(data) {
                         location.reload();
