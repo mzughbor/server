@@ -75,20 +75,25 @@ class AdminMain extends FalconThemeSnapshotsController
             return false;
         }
 
-        $output = $this->FalconWpTemplates->capture((int) $this->post['template_id']);
+        $template_id = (int) $this->post['template_id'];
+        $output = $this->FalconWpTemplates->capture($template_id);
 
         if ($output === false) {
             $errors = $this->FalconWpTemplates->errors();
+            $message = $errors['capture']['failed'] ?? Language::_('AdminMain.!error.capture.failed', true);
+            $this->flashMessage('error', $message, null, false);
             $this->outputAsJson([
                 'success' => false,
-                'message' => $errors['capture']['failed'] ?? Language::_('AdminMain.!error.capture.failed', true),
+                'message' => $message,
             ]);
             return false;
         }
 
+        $message = Language::_('AdminMain.!success.capture', true);
+        $this->flashMessage('message', $message, null, false);
         $this->outputAsJson([
             'success' => true,
-            'message' => Language::_('AdminMain.!success.capture', true),
+            'message' => $message,
             'output' => $output,
         ]);
         return false;

@@ -12,6 +12,7 @@ class FalconWpTemplates extends FalconThemeSnapshotsModel
 {
     public const STORAGE_ROOT = '/var/lib/falcon-provisioner/templates';
     public const CAPTURE_BIN = '/opt/falcon-provisioner/bin/snapshot_capture.sh';
+    public const CAPTURE_LOG = '/var/log/falcon-provisioner-capture.log';
 
     public function __construct()
     {
@@ -167,14 +168,33 @@ class FalconWpTemplates extends FalconThemeSnapshotsModel
                 : ''
         );
 
+        $started = gmdate('Y-m-d H:i:s');
+        $this->logCapture(sprintf(
+            '[start] template_id=%d slug=%s staging=%s cmd=%s',
+            (int) $template_id,
+            $template->slug,
+            $template->staging_domain,
+            $cmd
+        ));
+
         $output = [];
         $code = 0;
         exec($cmd, $output, $code);
+        $outputText = implode("\n", $output);
 
-        if ($code !== 0 || !preg_match('/^CAPTURE_OK/m', implode("\n", $output))) {
+        $this->logCapture(sprintf(
+            '[finish] template_id=%d slug=%s exit=%d started=%s output=%s',
+            (int) $template_id,
+            $template->slug,
+            $code,
+            $started,
+            $outputText !== '' ? $outputText : '(empty)'
+        ));
+
+        if ($code !== 0 || !preg_match('/^CAPTURE_OK/m', $outputText)) {
             $this->Input->setErrors([
                 'capture' => [
-                    'failed' => Language::_('FalconWpTemplates.!error.capture.failed', true, implode("\n", $output))
+                    'failed' => Language::_('FalconWpTemplates.!error.capture.failed', true, $outputText)
                 ]
             ]);
             return false;
@@ -188,6 +208,17 @@ class FalconWpTemplates extends FalconThemeSnapshotsModel
         $this->syncMetaActive($template->slug, (bool) $template->active, $template);
 
         return $output;
+    }
+
+    /**
+     * Append a line to the VPS capture log (best-effort).
+     *
+     * @param string $line
+     */
+    private function logCapture($line)
+    {
+        $entry = sprintf("[%s] [blesta_capture] %s\n", gmdate('Y-m-d H:i:s'), $line);
+        @file_put_contents(self::CAPTURE_LOG, $entry, FILE_APPEND | LOCK_EX);
     }
 
     /**

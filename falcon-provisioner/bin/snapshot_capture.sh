@@ -15,13 +15,24 @@ SITE_USER="falco6812"
 WP="/usr/local/bin/wp"
 TEMPLATES_DIR="/var/lib/falcon-provisioner/templates"
 LOG="/var/log/falcon-provisioner.log"
+CAPTURE_LOG="/var/log/falcon-provisioner-capture.log"
 URL_TOKEN="{{SITE_URL}}"
 
 DOMAIN=""; SLUG=""; NAME=""; DESCRIPTION=""; THUMB=""
 
 ts() { date '+%Y-%m-%d %H:%M:%S'; }
-log() { echo "[$(ts)] [snapshot_capture] $*" | tee -a "$LOG" >&2; }
+log() { echo "[$(ts)] [snapshot_capture] $*" | tee -a "$LOG" "$CAPTURE_LOG" >&2; }
 die() { log "ERROR: $*"; echo "CAPTURE_FAILED: $*"; exit 1; }
+
+# GNU tar exits 1 when files change during read; archive is still usable.
+tar_archive() {
+  tar --warning=no-file-changed -czf "$1" -C "$2" "${@:3}"
+  local rc=$?
+  if [ "$rc" -gt 1 ]; then
+    return "$rc"
+  fi
+  return 0
+}
 
 usage() {
   cat >&2 <<EOF
@@ -91,11 +102,12 @@ sudo -u "$SITE_USER" rm -f "$TMPSQL"
 trap - EXIT
 
 # wp-content archive (skip cache/temp).
-tar -czf "${OUT}/wp-content.tar.gz" -C "$DOCROOT" \
+tar_archive "${OUT}/wp-content.tar.gz" "$DOCROOT" \
   --exclude='wp-content/cache' \
   --exclude='wp-content/upgrade' \
   --exclude='wp-content/debug.log' \
-  wp-content
+  wp-content \
+  || die "wp-content archive failed"
 
 CAPTURED_AT="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 

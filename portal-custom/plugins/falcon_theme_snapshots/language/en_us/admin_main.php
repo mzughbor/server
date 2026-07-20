@@ -16,6 +16,7 @@ $lang['AdminMain.index.heading_options'] = 'Actions';
 $lang['AdminMain.index.yes'] = 'Active';
 $lang['AdminMain.index.no'] = 'Inactive';
 $lang['AdminMain.index.action_capture'] = 'Capture';
+$lang['AdminMain.index.capture_running'] = 'Capturing…';
 $lang['AdminMain.index.action_activate'] = 'Activate';
 $lang['AdminMain.index.action_deactivate'] = 'Deactivate';
 $lang['AdminMain.index.action_edit'] = 'Edit';
