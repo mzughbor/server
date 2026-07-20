@@ -15,8 +15,10 @@ SITE_USER="falco6812"
 WP="/usr/local/bin/wp"
 STATE_DIR="/var/lib/falcon-provisioner"
 STAGING_BASE_DIR="${STATE_DIR}/staging-base"
+STAGING_CONFIG="/opt/falcon-provisioner/templates/staging_base.json"
 BASE_DOMAIN="wp-staging-base.falcon.codes"
 SECRETS_DIR="${STATE_DIR}/secrets"
+SITES="${STATE_DIR}/sites.json"
 LOG="/var/log/falcon-provisioner.log"
 
 DOMAIN=""; FORCE=0
@@ -43,6 +45,28 @@ done
 
 [ "$(id -u)" -eq 0 ] || die "must run as root"
 [ -n "$DOMAIN" ] || usage
+
+# Load golden base config (env overrides file).
+if [ -f "$STAGING_CONFIG" ]; then
+  BASE_DOMAIN=$(php -r '
+    $c=json_decode(@file_get_contents($argv[1]),true) ?: [];
+    echo $c["base_domain"] ?? "";
+  ' "$STAGING_CONFIG")
+  CFG_DIR=$(php -r '
+    $c=json_decode(@file_get_contents($argv[1]),true) ?: [];
+    echo $c["storage_dir"] ?? "";
+  ' "$STAGING_CONFIG")
+  [ -n "$CFG_DIR" ] && STAGING_BASE_DIR="$CFG_DIR"
+fi
+[ -n "${FALCON_STAGING_BASE:-}" ] && BASE_DOMAIN="$FALCON_STAGING_BASE"
+BASE_DOMAIN="$(echo "$BASE_DOMAIN" | tr '[:upper:]' '[:lower:]')"
+ADMIN_EMAIL="${ADMIN_EMAIL:-mzughbo@gmail.com}"
+if [ -f "$STAGING_CONFIG" ]; then
+  ADMIN_EMAIL=$(php -r '
+    $c=json_decode(@file_get_contents($argv[1]),true) ?: [];
+    echo $c["admin_email"] ?? "mzughbo@gmail.com";
+  ' "$STAGING_CONFIG")
+fi
 
 if ! echo "$DOMAIN" | grep -q '\.'; then
   DOMAIN="${DOMAIN}.${MASTER}"
@@ -223,6 +247,30 @@ CLONED_FROM=${BASE_DOMAIN}
 CREATED_AT=$(ts)
 EOF
 chmod 600 "$SECRET_FILE"
+
+# Register staging site in sites.json (for ops visibility; not a customer trial).
+NOW_ISO=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+if [ -f "$SITES" ]; then
+  php -r '
+    $f=$argv[1];
+    $rec=[
+      "subdomain"=>$argv[2], "fqdn"=>$argv[3], "db"=>$argv[4], "db_user"=>$argv[5],
+      "wp_admin_user"=>$argv[6], "theme_id"=>"staging", "wp_theme"=>"",
+      "template_slug"=>"", "provision_mode"=>"staging_clone",
+      "client_id"=>"staging", "email"=>$argv[7], "created_at"=>$argv[8],
+      "ssl"=>"issued", "ftp_user"=>"", "ftp_host"=>$argv[3],
+      "ftp_status"=>"n/a", "status"=>"staging", "cloned_from"=>$argv[9]
+    ];
+    $fh=fopen($f,"c+"); flock($fh,LOCK_EX);
+    $raw=stream_get_contents($fh); $a=json_decode($raw,true); if(!is_array($a)) $a=[];
+    $a=array_values(array_filter($a, fn($r)=>($r["subdomain"]??"")!==$argv[2]));
+    $a[]=$rec;
+    ftruncate($fh,0); rewind($fh); fwrite($fh, json_encode($a, JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT));
+    fflush($fh); flock($fh,LOCK_UN); fclose($fh);
+  ' "$SITES" "$SUB" "$FQDN" "$DBNAME" "$DBUSER" "$WP_ADMIN_USER" "$ADMIN_EMAIL" "$NOW_ISO" "$BASE_DOMAIN" 2>/dev/null \
+    && log "recorded staging site in ${SITES}" || log "WARN: failed to update sites.json"
+  chmod 640 "$SITES" 2>/dev/null; chgrp "$SITE_USER" "$SITES" 2>/dev/null
+fi
 
 HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://${FQDN}/" --max-time 20 2>/dev/null || echo "000")
 log "=== clone staging success: ${TARGET_URL} http=${HTTP_CODE} secrets=${SECRET_FILE} ==="

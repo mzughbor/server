@@ -1,0 +1,5 @@
+{
+  "base_domain": "wp-staging-base.falcon.codes",
+  "storage_dir": "/var/lib/falcon-provisioner/staging-base",
+  "admin_email": "mzughbo@gmail.com"
+}

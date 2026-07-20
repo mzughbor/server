@@ -15,6 +15,7 @@ class FalconWpTemplates extends FalconThemeSnapshotsModel
     public const CAPTURE_LOG = '/var/log/falcon-provisioner-capture.log';
     public const ADMIN_TEST_BIN = '/opt/falcon-provisioner/bin/admin_test_provision.sh';
     public const CLONE_STAGING_BIN = '/opt/falcon-provisioner/bin/clone_staging_wp.sh';
+    public const SYNC_META_BIN = '/opt/falcon-provisioner/bin/sync_template_meta.sh';
     public const PROVISION_LOG = '/var/log/falcon-provisioner.log';
     public const STAGING_SECRETS_DIR = '/var/lib/falcon-provisioner/secrets';
 
@@ -269,11 +270,23 @@ class FalconWpTemplates extends FalconThemeSnapshotsModel
      */
     public function getList($company_id, $page = 1, array $order_by = ['sort_order' => 'asc'])
     {
-        return $this->Record->select()->from('falcon_wp_templates')->
+        $templates = $this->Record->select()->from('falcon_wp_templates')->
             where('company_id', '=', $company_id)->
             order($order_by)->
             limit($this->getPerPage(), (max(1, $page) - 1) * $this->getPerPage())->
             fetchAll();
+
+        foreach ($templates as $template) {
+            $template->staging_ready = $this->stagingSiteReady($template->staging_domain);
+            $template->staging_admin_url = null;
+            if ($template->staging_ready) {
+                $creds = $this->getStagingCredentials($template->staging_domain);
+                $template->staging_admin_url = $creds['WP_ADMIN_URL']
+                    ?? ('https://' . $template->staging_domain . '/wp-admin/');
+            }
+        }
+
+        return $templates;
     }
 
     /**
@@ -532,16 +545,26 @@ class FalconWpTemplates extends FalconThemeSnapshotsModel
             return;
         }
 
-        $meta['active'] = $active;
+        $patch = ['active' => $active];
         if ($template) {
-            $meta['name'] = $template->name;
-            $meta['description'] = $template->description;
-            $meta['thumbnail_url'] = $template->thumbnail_url;
-            $meta['staging_domain'] = $template->staging_domain;
-            $meta['sort_order'] = (int) $template->sort_order;
+            $patch['name'] = $template->name;
+            $patch['description'] = $template->description;
+            $patch['thumbnail_url'] = $template->thumbnail_url;
+            $patch['staging_domain'] = $template->staging_domain;
+            $patch['sort_order'] = (int) $template->sort_order;
         }
 
-        file_put_contents($metaPath, json_encode($meta, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
+        $json = json_encode($patch, JSON_UNESCAPED_SLASHES);
+        $cmd = sprintf(
+            'sudo %s %s %s 2>&1',
+            escapeshellarg(self::SYNC_META_BIN),
+            escapeshellarg($slug),
+            escapeshellarg($json)
+        );
+        exec($cmd, $unused, $code);
+        if ($code !== 0) {
+            $this->logProvision(sprintf('[sync_meta_failed] slug=%s exit=%d', $slug, $code));
+        }
     }
 
     /**

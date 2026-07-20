@@ -8,6 +8,7 @@ SITE_USER="falco6812"
 CAPTURE="/opt/falcon-provisioner/bin/snapshot_capture.sh"
 ADMIN_TEST="/opt/falcon-provisioner/bin/admin_test_provision.sh"
 CLONE_STAGING="/opt/falcon-provisioner/bin/clone_staging_wp.sh"
+SYNC_META="/opt/falcon-provisioner/bin/sync_template_meta.sh"
 CAPTURE_LOG="/var/log/falcon-provisioner-capture.log"
 SUDOERS="/etc/sudoers.d/falcon-template-capture"
 
@@ -21,10 +22,10 @@ touch "$CAPTURE_LOG"
 chown root:"$SITE_USER" "$CAPTURE_LOG"
 chmod 664 "$CAPTURE_LOG"
 
-echo ">> Sudoers: ${SITE_USER} may run snapshot_capture.sh, admin_test_provision.sh, and clone_staging_wp.sh as root"
+echo ">> Sudoers: ${SITE_USER} may run capture, staging clone, meta sync, and test provision as root"
 install -m 440 /dev/stdin "$SUDOERS" <<EOF
 # Falcon Theme Snapshots — Blesta admin capture + staging clone + test provision
-${SITE_USER} ALL=(root) NOPASSWD: ${CAPTURE}, ${ADMIN_TEST}, ${CLONE_STAGING}
+${SITE_USER} ALL=(root) NOPASSWD: ${CAPTURE}, ${ADMIN_TEST}, ${CLONE_STAGING}, ${SYNC_META}
 EOF
 visudo -cf "$SUDOERS"
 

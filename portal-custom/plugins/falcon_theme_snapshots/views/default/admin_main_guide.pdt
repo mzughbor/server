@@ -40,14 +40,18 @@
                     <td><?php $this->_('AdminMain.guide.field_staging'); ?></td>
                 </tr>
                 <tr>
+                    <td><?php $this->_('AdminMain.guide.action_provision'); ?></td>
+                    <td><?php $this->_('AdminMain.guide.field_provision'); ?></td>
+                </tr>
+                <tr class="odd_row">
                     <td><code>thumbnail_url</code></td>
                     <td><?php $this->_('AdminMain.guide.field_thumbnail'); ?></td>
                 </tr>
-                <tr class="odd_row">
+                <tr>
                     <td><?php $this->_('AdminMain.guide.action_capture'); ?></td>
                     <td><?php $this->_('AdminMain.guide.field_capture'); ?></td>
                 </tr>
-                <tr>
+                <tr class="odd_row">
                     <td><?php $this->_('AdminMain.guide.action_activate'); ?></td>
                     <td><?php $this->_('AdminMain.guide.field_activate'); ?></td>
                 </tr>

@@ -32,6 +32,7 @@
                     <td><span><?php $this->_('AdminMain.index.heading_name'); ?></span></td>
                     <td><span><?php $this->_('AdminMain.index.heading_slug'); ?></span></td>
                     <td><span><?php $this->_('AdminMain.index.heading_staging'); ?></span></td>
+                    <td><span><?php $this->_('AdminMain.index.heading_staging_status'); ?></span></td>
                     <td><span><?php $this->_('AdminMain.index.heading_active'); ?></span></td>
                     <td><span><?php $this->_('AdminMain.index.heading_captured'); ?></span></td>
                     <td class="last"><span><?php $this->_('AdminMain.index.heading_options'); ?></span></td>
@@ -45,7 +46,21 @@
                         <strong><?php echo $this->Html->safe($template->name ?? ''); ?></strong>
                     </td>
                     <td><code><?php echo $this->Html->safe($template->slug ?? ''); ?></code></td>
-                    <td><a href="https://<?php echo $this->Html->safe($template->staging_domain ?? ''); ?>" target="_blank" rel="noopener"><?php echo $this->Html->safe($template->staging_domain ?? ''); ?></a></td>
+                    <td>
+                        <?php if (!empty($template->staging_domain)) { ?>
+                        <a href="https://<?php echo $this->Html->safe($template->staging_domain); ?>" target="_blank" rel="noopener"><?php echo $this->Html->safe($template->staging_domain); ?></a>
+                        <?php } else { ?>—<?php } ?>
+                    </td>
+                    <td>
+                        <?php if (!empty($template->staging_ready)) { ?>
+                        <span class="open"><?php $this->_('AdminMain.index.staging_ready'); ?></span>
+                        <?php if (!empty($template->staging_admin_url)) { ?>
+                        — <a href="<?php echo $this->Html->safe($template->staging_admin_url); ?>" target="_blank" rel="noopener"><?php $this->_('AdminMain.index.staging_wp_admin'); ?></a>
+                        <?php } ?>
+                        <?php } else { ?>
+                        <span class="closed"><?php $this->_('AdminMain.index.staging_missing'); ?></span>
+                        <?php } ?>
+                    </td>
                     <td>
                         <?php if (!empty($template->active)) { ?>
                         <span class="open"><?php $this->_('AdminMain.index.yes'); ?></span>

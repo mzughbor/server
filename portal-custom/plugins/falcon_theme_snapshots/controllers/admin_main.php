@@ -51,8 +51,6 @@ class AdminMain extends FalconThemeSnapshotsController
             $vars = $this->post;
             $vars['company_id'] = $this->company_id;
 
-            $this->FalconWpTemplates->add($vars);
-
             $template = $this->FalconWpTemplates->add($vars);
 
             if ($template === false || (($errors = $this->FalconWpTemplates->errors()) && !isset($errors['staging']))) {
@@ -116,8 +114,6 @@ class AdminMain extends FalconThemeSnapshotsController
         }
 
         if (!empty($this->post)) {
-            $this->FalconWpTemplates->edit($template->id, $this->post);
-
             $updated = $this->FalconWpTemplates->edit($template->id, $this->post);
 
             if ($updated === false || (($errors = $this->FalconWpTemplates->errors()) && !isset($errors['staging']))) {

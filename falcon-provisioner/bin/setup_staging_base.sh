@@ -9,6 +9,7 @@
 set -euo pipefail
 
 MASTER="falcon.codes"
+STAGING_CONFIG="/opt/falcon-provisioner/templates/staging_base.json"
 BASE_SUB="wp-staging-base"
 BASE_DOMAIN="${BASE_SUB}.${MASTER}"
 HOME_BASE="/home/${MASTER}"
@@ -25,6 +26,16 @@ die() { log "ERROR: $*"; exit 1; }
 
 [ "$(id -u)" -eq 0 ] || die "must run as root"
 [ -x "$PROVISION" ] || die "provision.sh not found at ${PROVISION}"
+
+if [ -f "$STAGING_CONFIG" ]; then
+  BASE_DOMAIN=$(php -r '
+    $c=json_decode(@file_get_contents($argv[1]),true) ?: [];
+    echo $c["base_domain"] ?? "";
+  ' "$STAGING_CONFIG")
+  BASE_SUB="${BASE_DOMAIN%.${MASTER}}"
+fi
+[ -n "${FALCON_STAGING_BASE:-}" ] && BASE_DOMAIN="$FALCON_STAGING_BASE" && BASE_SUB="${BASE_DOMAIN%.${MASTER}}"
+BASE_DOMAIN="$(echo "$BASE_DOMAIN" | tr '[:upper:]' '[:lower:]')"
 
 DOCROOT="${HOME_BASE}/${BASE_DOMAIN}"
 
