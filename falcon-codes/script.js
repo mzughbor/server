@@ -116,19 +116,18 @@
     const bar = document.getElementById("launchCtaBar");
     const subEl = document.getElementById("launchCtaSub");
     const themeEl = document.getElementById("launchCtaTheme");
+    const showBar = Boolean(sub);
+    const useFixedBar = showBar && window.matchMedia("(max-width: 768px)").matches;
+
     if (bar && subEl && themeEl) {
-      if (sub && theme) {
-        bar.hidden = false;
+      bar.hidden = !showBar;
+      if (showBar) {
         subEl.textContent = `${sub}.falcon.codes`;
-        themeEl.textContent = themeLabel || theme;
-      } else if (sub) {
-        bar.hidden = false;
-        subEl.textContent = `${sub}.falcon.codes`;
-        themeEl.textContent = "pick one below ↑";
-      } else {
-        bar.hidden = true;
+        themeEl.textContent = theme ? (themeLabel || theme) : "pick one below ↑";
       }
+      bar.classList.toggle("is-fixed", useFixedBar);
     }
+    document.body.classList.toggle("has-launch-bar", useFixedBar);
   }
 
   function goToOrder(opts) {
@@ -262,6 +261,7 @@
   navToggle?.addEventListener("click", () => {
     const open = nav.classList.toggle("nav-open");
     navToggle.setAttribute("aria-expanded", open);
+    navToggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
     if (open) header?.classList.remove("is-hidden");
   });
 
@@ -464,7 +464,10 @@
   scrollPrev?.addEventListener("click", () => themeScroll?.scrollBy({ left: -getThemeScrollStep(), behavior: "smooth" }));
   scrollNext?.addEventListener("click", () => themeScroll?.scrollBy({ left: getThemeScrollStep(), behavior: "smooth" }));
   themeScroll?.addEventListener("scroll", updateThemeScrollButtons, { passive: true });
-  window.addEventListener("resize", updateThemeScrollButtons);
+  window.addEventListener("resize", () => {
+    updateThemeScrollButtons();
+    updateCtaState();
+  });
 
   // Boot
   loadPackages().then(() => {
